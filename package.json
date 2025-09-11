@@ -1,0 +1,17 @@
+{
+	"name": "yxp-starter",
+	"version": "0.0.1",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"check": "biome check --write",
+		"format": "biome format --write"
+	},
+	"keywords": [],
+	"author": "snailuu",
+	"license": "ISC",
+	"packageManager": "pnpm@10.14.0",
+	"devDependencies": {
+		"@biomejs/biome": "2.2.2"
+	}
+}
