@@ -17,12 +17,18 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^19.8.1
         version: 19.8.1
+      '@types/node':
+        specifier: ^24.3.1
+        version: 24.3.1
       husky:
         specifier: ^9.1.7
         version: 9.1.7
       lint-staged:
         specifier: ^16.1.6
         version: 16.1.6
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
 
 packages:
 
