@@ -1,6 +1,6 @@
 {
   "name": "yxp-starter",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "",
   "scripts": {
     "build": "rslib build",
@@ -9,7 +9,6 @@
     "check": "biome check --write",
     "format": "biome format --write",
     "test": "vitest",
-    "test:bench": "vitest bench",
     "test:ci": "cross-env CI=true vitest run",
     "prepare": "husky"
   },
@@ -29,7 +28,7 @@
   "main": "./dist/cjs/index.cjs",
   "types": "./dist/esm/index.d.ts",
   "keywords": [],
-  "author": "snailuu",
+  "author": "yuxu-palace",
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {

@@ -3,5 +3,5 @@
  * @type {import('lint-staged').Configuration}
  */
 export default {
-  '*.{ts,tsx,js,jsx}': ['pnpm run check'],
+  '*.{ts,tsx,js,jsx}': () => ['pnpm run check'],
 };
