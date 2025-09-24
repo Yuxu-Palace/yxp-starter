@@ -28,7 +28,7 @@
   "main": "./dist/cjs/index.cjs",
   "types": "./dist/esm/index.d.ts",
   "keywords": [],
-  "author": "yuxu-palace",
+  "author": "Yuxu-Palace",
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {
