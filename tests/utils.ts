@@ -1,4 +1,3 @@
-import { beforeAll } from 'vitest';
 import { describe, expect, test } from 'vitest';
 
 type Module = typeof import('../src/index');
@@ -30,6 +29,7 @@ function getBaseCtx<T extends Partial<Context> & Pick<Context, 'format' | 'IS_CI
     ...extendsCtx,
   };
 }
+
 /**
  * 本地模式下测试源码
  *
@@ -38,24 +38,20 @@ function getBaseCtx<T extends Partial<Context> & Pick<Context, 'format' | 'IS_CI
  * @param testFunc 测试函数
  */
 // biome-ignore lint/suspicious/noExplicitAny: is test
-export function MFT(testFunc: (getModule: () => Module, ctx: Context) => any) {
-  describe.each(Object.values(MODE))('multiple format test', (format) => {
+export function MFT(testFunc: (module: Module, ctx: Context) => any) {
+  describe.each(Object.values(MODE))('multiple format test', async (format) => {
     // 本地只测试源码
     const sourceOnly = !IS_CI && format === MODE.SOURCE;
     // ci 模式下测试打包产物
     const ciOnly = IS_CI && format !== MODE.SOURCE;
 
-    describe.runIf(sourceOnly || ciOnly)(`${format} test`, () => {
-      let module: Module;
+    describe.runIf(sourceOnly || ciOnly).concurrent(`${format} test`, async () => {
+      const module = (await (async () => {
+        if (format === MODE.SOURCE) return import('../src/index');
+        return import(`../dist/${format}/index.${format === 'cjs' ? 'c' : ''}js`);
+      })()) as Module;
 
-      beforeAll(async () => {
-        module = (await (async () => {
-          if (format === MODE.SOURCE) return import('../src/index');
-          return import(`../dist/${format}/index.${format === 'cjs' ? 'c' : ''}js`);
-        })()) as Module;
-      });
-
-      testFunc(() => module, getBaseCtx({ format, IS_CI }));
+      await testFunc(module, getBaseCtx({ format, IS_CI }));
     });
   });
 }
