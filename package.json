@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "build": "rslib build",
     "dev": "rslib build --watch",
     "dev:mf": "rslib mf-dev",
@@ -31,9 +32,15 @@
   "author": "yuxu-palace",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.10.0",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=18.0.0"
+    }
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.2.2",
     "@commitlint/cli": "^19.8.1",
