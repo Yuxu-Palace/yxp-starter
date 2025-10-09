@@ -28,9 +28,17 @@
   "main": "./dist/cjs/index.cjs",
   "types": "./dist/esm/index.d.ts",
   "keywords": [],
-  "author": "Yuxu-Palace",
+  "author": "yuxu-palace",
   "license": "MIT",
-  "packageManager": "pnpm@^10.14.0",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=18.0.0"
+    },
+    "packageManager": {
+      "name": "pnpm"
+    }
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.2.2",
     "@commitlint/cli": "^19.8.1",
