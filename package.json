@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "description": "",
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
     "build": "rslib build",
     "dev": "rslib build --watch",
     "dev:mf": "rslib mf-dev",
@@ -31,14 +30,13 @@
   "keywords": [],
   "author": "yuxu-palace",
   "license": "MIT",
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=10.0.0"
-  },
   "devEngines": {
     "runtime": {
       "name": "node",
       "version": ">=18.0.0"
+    },
+    "packageManager": {
+      "name": "pnpm"
     }
   },
   "devDependencies": {
