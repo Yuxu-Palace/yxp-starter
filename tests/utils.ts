@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { describe, expect, test } from 'vitest';
 
 type Module = typeof import('../src/index');
@@ -37,7 +38,6 @@ function getBaseCtx<T extends Partial<Context> & Pick<Context, 'format' | 'IS_CI
  *
  * @param testFunc 测试函数
  */
-// biome-ignore lint/suspicious/noExplicitAny: is test
 export function MFT(testFunc: (module: Module, ctx: Context) => any) {
   describe.each(Object.values(MODE))('multiple format test', async (format) => {
     // 本地只测试源码
@@ -47,7 +47,9 @@ export function MFT(testFunc: (module: Module, ctx: Context) => any) {
 
     describe.runIf(sourceOnly || ciOnly).concurrent(`${format} test`, async () => {
       const module = (await (async () => {
-        if (format === MODE.SOURCE) return import('../src/index');
+        if (format === MODE.SOURCE) {
+          return import('../src/index');
+        }
         return import(`../dist/${format}/index.${format === 'cjs' ? 'c' : ''}js`);
       })()) as Module;
 

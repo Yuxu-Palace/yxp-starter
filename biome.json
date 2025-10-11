@@ -1,8 +1,7 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "ignoreUnknown": true,
-    "includes": ["*", "!dist"]
+    "ignoreUnknown": true
   },
   "assist": {
     "actions": {
@@ -123,7 +122,12 @@
         "noSetterReturn": { "level": "error" },
         "noStringCaseMismatch": { "level": "error", "fix": "safe" },
         "noSwitchDeclarations": { "level": "error", "fix": "safe" },
-        "noUndeclaredDependencies": { "level": "error" },
+        "noUndeclaredDependencies": {
+          "level": "off",
+          "options": {
+            "devDependencies": ["vitest.config.ts", "**/tests/*.{spec,test,bench}.{js,ts,jsx,tsx}", "./*.{ts,js}"]
+          }
+        },
         "noUndeclaredVariables": {
           "level": "error",
           "options": {
@@ -176,7 +180,22 @@
         "noShadow": "error",
         "noUselessUndefined": { "level": "error", "fix": "safe" },
         "useExhaustiveSwitchCases": { "level": "error" },
-        "useExplicitType": "off"
+        "useExplicitType": "off",
+        "noReactForwardRef": { "level": "info", "fix": "safe" },
+        "noDeprecatedImports": { "level": "info" },
+        "useConsistentArrowReturn": {
+          "level": "error",
+          "fix": "safe",
+          "options": {
+            "style": "asNeeded",
+            "requireForObjectLiteral": true
+          }
+        },
+        "noVueDuplicateKeys": { "level": "error" },
+        "noUnusedExpressions": { "level": "error" },
+        "noJsxLiterals": "off",
+        "noDuplicateDependencies": { "level": "error" },
+        "noUselessCatchBinding": { "level": "error" }
       },
       "performance": {
         "noAccumulatingSpread": { "level": "error" },
@@ -200,7 +219,6 @@
         "noGlobalEval": { "level": "error" }
       },
       "style": {
-        "noNonNullAssertion": "off",
         "noDescendingSpecificity": { "level": "error" },
         "noValueAtRule": { "level": "error" },
         "noCommonJs": { "level": "error" },
@@ -259,10 +277,7 @@
             "syntax": "shorthand"
           }
         },
-        "useConsistentBuiltinInstantiation": {
-          "level": "error",
-          "fix": "safe"
-        },
+        "useConsistentBuiltinInstantiation": { "level": "error", "fix": "safe" },
         "useConsistentCurlyBraces": { "level": "error", "fix": "safe" },
         "useConsistentMemberAccessibility": {
           "level": "error",
@@ -306,13 +321,7 @@
                 "selector": {
                   "kind": "variable"
                 },
-                "match": "[ijxy]|(.*)"
-              },
-              {
-                "selector": {
-                  "kind": "objectLiteralProperty"
-                },
-                "match": "[ijxy]|(.*)"
+                "match": "[ij]|(.*)"
               },
               {
                 "selector": {
