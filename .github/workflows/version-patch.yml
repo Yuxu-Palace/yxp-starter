@@ -1,0 +1,34 @@
+name: Deploy
+
+on:
+  pull_request:
+    branches: [main, beta, alpha]
+    types: [opened, synchronize, reopened, labeled, unlabeled, closed]
+
+jobs:
+  version-management:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 版本管理
+        if: ${{ github.event.action != 'closed' || github.event.pull_request.merged == true }}
+        uses: Yuxu-Palace/yuheng-dispatch@v0.1.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # 版本管理配置
+          version-prefix: 'v'
+          supported-branches: 'main,beta,alpha'
+          enable-changelog: 'true'
+          
+          # npm 发布配置
+          enable-npm-publish: 'false'

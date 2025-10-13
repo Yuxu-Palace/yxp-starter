@@ -1,34 +1,36 @@
-import process from 'node:process';
-import { describe, expect, test } from 'vitest';
+import process from "node:process";
+import { describe, expect, test } from "vitest";
 
-type Module = typeof import('../src/index');
+type Module = typeof import("../src/index");
 
 const IS_CI = Boolean(process.env.CI);
 
 const MODE = {
-  SOURCE: 'src',
-  CJS: 'cjs',
-  ESM: 'esm',
+	SOURCE: "src",
+	CJS: "cjs",
+	ESM: "esm",
 } as const;
 
 type Mode = (typeof MODE)[keyof typeof MODE];
 
 interface Context {
-  format: Mode;
-  IS_CI: boolean;
+	format: Mode;
+	IS_CI: boolean;
 
-  describe: typeof describe;
-  test: typeof test;
-  expect: typeof expect;
+	describe: typeof describe;
+	test: typeof test;
+	expect: typeof expect;
 }
 
-function getBaseCtx<T extends Partial<Context> & Pick<Context, 'format' | 'IS_CI'>>(extendsCtx: T) {
-  return {
-    describe,
-    test,
-    expect,
-    ...extendsCtx,
-  };
+function getBaseCtx<
+	T extends Partial<Context> & Pick<Context, "format" | "IS_CI">,
+>(extendsCtx: T) {
+	return {
+		describe,
+		test,
+		expect,
+		...extendsCtx,
+	};
 }
 
 /**
@@ -38,22 +40,28 @@ function getBaseCtx<T extends Partial<Context> & Pick<Context, 'format' | 'IS_CI
  *
  * @param testFunc 测试函数
  */
-export function MFT(testFunc: (module: Module, ctx: Context) => void | Promise<void>) {
-  describe.each(Object.values(MODE))('multiple format test', async (format) => {
-    // 本地只测试源码
-    const sourceOnly = !IS_CI && format === MODE.SOURCE;
-    // ci 模式下测试打包产物
-    const ciOnly = IS_CI && format !== MODE.SOURCE;
+export function MFT(
+	testFunc: (module: Module, ctx: Context) => void | Promise<void>,
+) {
+	describe.each(Object.values(MODE))("multiple format test", async (format) => {
+		// 本地只测试源码
+		const sourceOnly = !IS_CI && format === MODE.SOURCE;
+		// ci 模式下测试打包产物
+		const ciOnly = IS_CI && format !== MODE.SOURCE;
 
-    describe.runIf(sourceOnly || ciOnly).concurrent(`${format} test`, async () => {
-      const module = (await (async () => {
-        if (format === MODE.SOURCE) {
-          return import('../src/index');
-        }
-        return import(`../dist/${format}/index.${format === 'cjs' ? 'c' : ''}js`);
-      })()) as Module;
+		describe
+			.runIf(sourceOnly || ciOnly)
+			.concurrent(`${format} test`, async () => {
+				const module = (await (async () => {
+					if (format === MODE.SOURCE) {
+						return import("../src/index");
+					}
+					return import(
+						`../dist/${format}/index.${format === "cjs" ? "c" : ""}js`
+					);
+				})()) as Module;
 
-      await testFunc(module, getBaseCtx({ format, IS_CI }));
-    });
-  });
+				await testFunc(module, getBaseCtx({ format, IS_CI }));
+			});
+	});
 }

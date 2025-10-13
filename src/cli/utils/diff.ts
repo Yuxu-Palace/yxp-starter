@@ -49,7 +49,10 @@ export function getDiffStats(
 	let removed = 0;
 
 	diff.forEach((part) => {
-		const lineCount = part.value.split("\n").length - 1;
+		const lines = part.value.split("\n").filter((line, index, arr) => {
+			return index < arr.length - 1 || line !== "";
+		});
+		const lineCount = lines.length;
 		if (part.added) {
 			added += lineCount;
 		} else if (part.removed) {
