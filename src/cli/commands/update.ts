@@ -40,7 +40,7 @@ interface PendingUpdate {
 	targetContent: string;
 }
 
-const IGNORED_TEMPLATE_ENTRIES = new Set(["node_modules"]);
+const IGNORED_TEMPLATE_ENTRIES = new Set(["node_modules", ".pnpm", "dist"]);
 const IGNORED_PROJECT_ENTRIES = new Set([
 	"node_modules",
 	".git",
@@ -49,6 +49,7 @@ const IGNORED_PROJECT_ENTRIES = new Set([
 	".turbo",
 	"coverage",
 ]);
+const SKIPPED_DYNAMIC_FILES = new Set(["README.md"]);
 
 async function scanTemplateFiles(templatesDir: string): Promise<FileUpdate[]> {
 	const files: FileUpdate[] = [];
@@ -193,6 +194,31 @@ async function validateProjectContext(currentDir: string): Promise<boolean> {
 	return true;
 }
 
+function sanitizePackageJsonContent(
+	content: string,
+	enforcedName?: string,
+): string {
+	try {
+		const parsed = JSON.parse(content);
+		if (typeof enforcedName === "string" && enforcedName.length > 0) {
+			parsed.name = enforcedName;
+		}
+		const serialized = JSON.stringify(parsed, null, 2);
+		return `${serialized}\n`;
+	} catch {
+		return content;
+	}
+}
+
+function getPackageName(content: string): string | undefined {
+	try {
+		const parsed = JSON.parse(content);
+		return typeof parsed.name === "string" ? parsed.name : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
 async function collectPendingUpdates(
 	templatesDir: string,
 	currentDir: string,
@@ -203,6 +229,11 @@ async function collectPendingUpdates(
 	const projectFiles = await scanProjectFiles(currentDir, allTemplateFiles);
 
 	for (const file of allTemplateFiles) {
+		if (SKIPPED_DYNAMIC_FILES.has(file.path)) {
+			projectFiles.delete(file.path);
+			console.log(chalk.gray(`→ Skipped ${file.path} (dynamic content)`));
+			continue;
+		}
 		const sourcePath = path.join(templatesDir, file.path);
 		const targetPath = path.join(currentDir, file.path);
 
@@ -219,6 +250,36 @@ async function collectPendingUpdates(
 			});
 			console.log(
 				chalk.green(`🆕 ${file.path} will be added ${formatStats(stats)}`),
+			);
+			continue;
+		}
+
+		if (file.path === "package.json") {
+			const [sourceRaw, targetRaw] = await Promise.all([
+				fs.readFile(sourcePath, "utf-8"),
+				fs.readFile(targetPath, "utf-8"),
+			]);
+			const targetName = getPackageName(targetRaw);
+			const sanitizedSource = sanitizePackageJsonContent(sourceRaw, targetName);
+			const sanitizedTarget = sanitizePackageJsonContent(targetRaw, targetName);
+
+			if (sanitizedSource === sanitizedTarget) {
+				console.log(chalk.gray(`→ ${file.path} is up to date`));
+				projectFiles.delete(file.path);
+				continue;
+			}
+
+			const stats = getDiffStats(sanitizedTarget, sanitizedSource);
+			updates.push({
+				kind: "modify",
+				file,
+				stats,
+				sourceContent: sanitizedSource,
+				targetContent: sanitizedTarget,
+			});
+			projectFiles.delete(file.path);
+			console.log(
+				chalk.cyan(`📝 ${file.path} has changes ${formatStats(stats)}`),
 			);
 			continue;
 		}
@@ -412,6 +473,20 @@ async function applyUpdate(
 	}
 
 	const sourcePath = path.join(templatesDir, pending.file.path);
+	if (pending.file.path === "package.json") {
+		const sourceRaw = await fs.readFile(sourcePath, "utf-8");
+		let targetName = "";
+		if (await fileExists(targetPath)) {
+			const targetRaw = await fs.readFile(targetPath, "utf-8");
+			targetName = getPackageName(targetRaw) ?? targetName;
+		}
+		const sanitized = sanitizePackageJsonContent(sourceRaw, targetName);
+		await fs.mkdir(path.dirname(targetPath), { recursive: true });
+		await fs.writeFile(targetPath, sanitized);
+		const verbLabel = pending.kind === "add" ? "Added" : "Updated";
+		console.log(chalk.green(`✓ ${verbLabel} ${pending.file.path}`));
+		return;
+	}
 	await fs.mkdir(path.dirname(targetPath), { recursive: true });
 	await fs.copyFile(sourcePath, targetPath);
 
