@@ -1,18 +1,19 @@
 {
 	"compilerOptions": {
 		"lib": ["ES2024"],
-		"target": "ES2024",
+		"target": "ES2022",
 		"module": "ESNext",
-		"baseUrl": "./",
-		"noEmit": true,
+		"outDir": "./bin",
+		"rootDir": "./src/cli",
 		"strict": true,
 		"skipLibCheck": true,
 		"isolatedModules": true,
 		"resolveJsonModule": true,
 		"moduleResolution": "bundler",
 		"useDefineForClassFields": true,
-		"erasableSyntaxOnly": true,
-		"allowImportingTsExtensions": true
+		"declaration": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true
 	},
-	"include": ["src/cli"]
+	"include": ["src/cli/**/*"]
 }

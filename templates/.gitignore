@@ -13,7 +13,7 @@ dist-cli
 dist-ssr
 *.local
 
-# Compiled CLI files
+# Compiled CLI files (keep bin/cli.js)
 bin/**/*.js
 bin/**/*.d.ts
 !bin/cli.js
