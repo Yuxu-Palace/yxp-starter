@@ -13,10 +13,6 @@ dist-cli
 dist-ssr
 *.local
 
-# Compiled CLI files
-bin/**/*.js
-bin/**/*.d.ts
-!bin/cli.js
 
 # Editor directories and files
 .vscode/*

@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"lib": ["ES2024"],
+		"lib": ["ES2022"],
 		"target": "ES2022",
 		"module": "ESNext",
 		"outDir": "./bin",
