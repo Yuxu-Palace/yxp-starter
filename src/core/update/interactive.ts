@@ -1,29 +1,29 @@
 /**
- * 交互式更新 UI 模块
- * 负责处理用户交互，包括提示、选择和更新应用
+ * 提供交互式更新流程以及用户提示逻辑。
  */
 
 import chalk from 'chalk';
 import prompts from 'prompts';
 import { showDiff } from '../../utils/diff.js';
 import { formatStats, logger } from '../../utils/logger.js';
+import { createProgressTracker } from '../../utils/progress.js';
 import { applyBatchUpdate, applyUpdate } from './applier.js';
 import type { PendingUpdate, PromptConfig, UpdateActionHandler } from './types.js';
 
 /**
- * prompts 交互返回的动作类型集合
+ * prompts 返回的用户动作类型。
  */
 type UpdateAction = 'update' | 'skip' | 'update-all' | 'skip-all';
 
 /**
- * 不同更新类型的提示配置
+ * 依据更新类型生成提示内容。
  */
 const PROMPT_CONFIGS: Record<string, PromptConfig> = {
   add: {
     buildMessage: (fileName, statsLabel) => `Add new file ${fileName}? ${statsLabel}`,
     choices: [
       { title: 'Add (copy from template)', value: 'update' },
-      { title: 'Skip (keep missing)', value: 'skip' },
+      { title: 'Skip (do not add)', value: 'skip' },
       { title: 'Add all remaining files', value: 'update-all' },
       { title: 'Skip all remaining files', value: 'skip-all' },
     ],
@@ -32,9 +32,9 @@ const PROMPT_CONFIGS: Record<string, PromptConfig> = {
     buildMessage: (fileName, statsLabel) => `Delete ${fileName}? ${statsLabel}`,
     choices: [
       { title: 'Delete (remove file)', value: 'update' },
-      { title: 'Keep (do not delete)', value: 'skip' },
+      { title: 'Skip (do not delete)', value: 'skip' },
       { title: 'Delete all remaining files', value: 'update-all' },
-      { title: 'Keep all remaining files', value: 'skip-all' },
+      { title: 'Skip all remaining files', value: 'skip-all' },
     ],
   },
   modify: {
@@ -49,7 +49,7 @@ const PROMPT_CONFIGS: Record<string, PromptConfig> = {
 };
 
 /**
- * 用户动作处理器映射
+ * 用户动作对应的处理方法。
  */
 const ACTION_HANDLERS: Record<UpdateAction, UpdateActionHandler> = {
   update: async ({ pending, templatesDir, currentDir }) => {
@@ -77,20 +77,25 @@ const ACTION_HANDLERS: Record<UpdateAction, UpdateActionHandler> = {
 };
 
 /**
- * 默认模式：逐条提示用户处理所有待更新文件
- *
- * @param updates - 更新列表
- * @param templatesDir - 模板目录路径
- * @param currentDir - 当前项目目录
+ * 逐个提示用户处理待更新文件。
  */
 export async function runInteractiveUpdate(
   updates: PendingUpdate[],
   templatesDir: string,
   currentDir: string,
 ): Promise<void> {
+  const progress = createProgressTracker(updates.length);
+
   for (let index = 0; index < updates.length; index += 1) {
     const pending = updates[index];
-    const action = await promptUpdateAction(pending);
+
+    if (index === 0) {
+      await progress.start(pending.file.path);
+    } else {
+      await progress.next(pending.file.path);
+    }
+
+    const action = await promptUpdateAction(pending, progress);
     const remaining = updates.slice(index + 1);
     const handler = ACTION_HANDLERS[action];
     const outcome = await handler({ pending, remaining, templatesDir, currentDir });
@@ -99,15 +104,18 @@ export async function runInteractiveUpdate(
       break;
     }
   }
+  progress.finish();
 }
 
 /**
- * 交互式提示用户对当前差异采取的操作
- *
- * @param pendingUpdate - 待处理的更新
- * @returns 用户选择的动作
+ * 提示用户为当前差异选择操作。
  */
-async function promptUpdateAction(pendingUpdate: PendingUpdate): Promise<UpdateAction> {
+async function promptUpdateAction(
+  pendingUpdate: PendingUpdate,
+  _progress?: ReturnType<typeof createProgressTracker>,
+): Promise<UpdateAction> {
+  // cli-progress-footer 会自动把新输出显示在进度条上方。
+
   if (pendingUpdate.isBinary) {
     logger.note(`
 🧮 ${pendingUpdate.file.path} is a binary file; diff preview skipped.`);
@@ -130,11 +138,7 @@ async function promptUpdateAction(pendingUpdate: PendingUpdate): Promise<UpdateA
 }
 
 /**
- * 根据差异类型构造 prompts 的菜单配置
- *
- * @param pendingUpdate - 待处理的更新
- * @param statsLabel - 格式化后的统计标签
- * @returns 提示配置
+ * 根据差异类型构造 prompts 的菜单配置。
  */
 function buildPromptConfig(
   pendingUpdate: PendingUpdate,

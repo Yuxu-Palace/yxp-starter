@@ -1,6 +1,5 @@
 /**
- * package.json 文件处理工具
- * 提供 package.json 的读取、格式化和标准化功能
+ * 处理 package.json 的读取、格式化与清理逻辑。
  */
 
 import { promises as fs } from 'node:fs';
@@ -8,19 +7,14 @@ import { JSON_INDENT_SPACES, JSON_TRAILING_NEWLINE } from '../core/update/consta
 import { fileExists } from './fs.js';
 
 /**
- * 验证 package name 是否有效
- * 使用类型谓词来缩小类型范围
+ * 验证 package name 是否有效，方便类型收窄。
  */
 export function isValidPackageName(name: string | undefined): name is string {
   return typeof name === 'string' && name.length > 0;
 }
 
 /**
- * 格式化 package.json 对象为标准字符串
- *
- * 使用统一的格式化规则确保：
- * 1. 与 npm/pnpm 的标准输出一致
- * 2. 避免因格式差异导致的虚假 diff
+ * 按统一缩进与换行格式化 package.json。
  */
 export function formatPackageJson(packageObject: unknown): string {
   const serialized = JSON.stringify(packageObject, null, JSON_INDENT_SPACES);
@@ -28,9 +22,7 @@ export function formatPackageJson(packageObject: unknown): string {
 }
 
 /**
- * 从 package.json 字符串中解析出项目名
- * @param content - package.json 文件内容
- * @returns 项目名称，解析失败返回 undefined
+ * 从 package.json 字符串中解析出项目名。
  */
 export function getPackageName(content: string): string | undefined {
   try {
@@ -42,15 +34,7 @@ export function getPackageName(content: string): string | undefined {
 }
 
 /**
- * 对 package.json 内容进行标准化处理
- *
- * 主要用途：
- * 1. 统一格式化，避免空格/换行差异导致的误报
- * 2. 可选地强制设置项目名称（用于模板 → 项目的比较）
- *
- * @param content - 原始 JSON 字符串
- * @param enforcedName - 强制使用的包名（用于忽略模板和项目的名称差异）
- * @returns 标准化后的 JSON 字符串，如果解析失败则返回原内容
+ * 统一 package.json 内容，可选地覆盖项目名称。
  */
 export function sanitizePackageJsonContent(content: string, enforcedName?: string): string {
   try {
@@ -65,13 +49,7 @@ export function sanitizePackageJsonContent(content: string, enforcedName?: strin
 }
 
 /**
- * 获取目标 package.json 的项目名称
- *
- * 用于在更新 package.json 时保留项目自身的名称，
- * 避免被模板的 name 字段覆盖
- *
- * @param targetPath - package.json 文件路径
- * @returns 项目名称，如果文件不存在或解析失败则返回空字符串
+ * 读取项目自身的 package name，更新时用于保留名称。
  */
 export async function getTargetPackageName(targetPath: string): Promise<string> {
   if (!(await fileExists(targetPath))) {

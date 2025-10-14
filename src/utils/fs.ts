@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-// 二进制检测时采样的最大字节数，平衡准确度与性能。
+// 二进制检测时采样的最大字节数，用于兼顾准确度与性能。
 const BINARY_SAMPLE_SIZE = 4096;
 
 // 粗略判断 Buffer 是否包含大量非文本字符，用于识别二进制文件。
@@ -11,7 +11,7 @@ function isBinaryBuffer(buffer: Buffer): boolean {
     return false;
   }
 
-  // 只取前若干字节做采样，避免大文件全量扫描。
+  // 仅取前若干字节做采样，避免大文件全量扫描。
   const sampleSize = Math.min(length, BINARY_SAMPLE_SIZE);
   let suspicious = 0;
 
@@ -31,12 +31,16 @@ function isBinaryBuffer(buffer: Buffer): boolean {
   return false;
 }
 
-// 读取文件内容，同时返回原始 Buffer，方便后续进行字节级比较。
+/**
+ * 读取文件内容，同时返回原始 Buffer，方便后续字节级比较。
+ */
 export type FileReadResult =
   | { raw: Buffer; content: string; isBinary: false }
   | { raw: Buffer; content: Buffer; isBinary: true };
 
-// 根据文件类型返回字符串或 Buffer，避免二进制内容被误当作文本处理。
+/**
+ * 根据文件类型返回字符串或 Buffer，避免误把二进制内容当作文本。
+ */
 export async function readFileContent(filePath: string): Promise<FileReadResult> {
   const buffer = await fs.readFile(filePath);
   if (isBinaryBuffer(buffer)) {
@@ -46,7 +50,9 @@ export async function readFileContent(filePath: string): Promise<FileReadResult>
   return { raw: buffer, content: buffer.toString('utf-8'), isBinary: false };
 }
 
-// 递归复制目录，保持原有结构。
+/**
+ * 递归复制目录，保持原有结构。
+ */
 export async function copyDirectory(src: string, dest: string): Promise<void> {
   await fs.mkdir(dest, { recursive: true });
   const entries = await fs.readdir(src, { withFileTypes: true });
@@ -63,7 +69,9 @@ export async function copyDirectory(src: string, dest: string): Promise<void> {
   }
 }
 
-// 检查文件是否存在，使用 access 避免抛出异常。
+/**
+ * 检查文件是否存在，使用 access 避免抛出异常。
+ */
 export async function fileExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
@@ -73,13 +81,17 @@ export async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-// 读取 JSON 并反序列化为泛型结果。
+/**
+ * 读取 JSON 文件并反序列化。
+ */
 export async function readJsonFile<T = unknown>(filePath: string): Promise<T> {
   const content = await fs.readFile(filePath, 'utf-8');
   return JSON.parse(content) as T;
 }
 
-// 格式化写入 JSON，统一缩进与换行。
+/**
+ * 以统一的缩进与换行格式写入 JSON。
+ */
 export async function writeJsonFile(filePath: string, data: unknown): Promise<void> {
   await fs.writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`);
 }

@@ -1,24 +1,16 @@
 /**
- * 更新应用模块
- * 负责将更新操作应用到磁盘，包括文件的新增、修改、删除
+ * 将模板中的改动写入当前项目。
  */
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { logger } from '../../utils/logger.js';
 import { getTargetPackageName, sanitizePackageJsonContent } from '../../utils/package-json.js';
+import { createProgressTracker } from '../../utils/progress.js';
 import type { PendingUpdate } from './types.js';
 
 /**
- * 将单个差异应用到磁盘
- *
- * 根据更新类型执行相应操作：
- * - add/modify: 复制文件（package.json 特殊处理）
- * - delete: 删除文件并清理空目录
- *
- * @param pending - 待处理的更新
- * @param templatesDir - 模板目录路径
- * @param currentDir - 当前项目目录
+ * 处理单个待更新文件并落盘。
  */
 export async function applyUpdate(pending: PendingUpdate, templatesDir: string, currentDir: string): Promise<void> {
   if (pending.kind === 'delete') {
@@ -36,27 +28,32 @@ export async function applyUpdate(pending: PendingUpdate, templatesDir: string, 
 }
 
 /**
- * 在非交互模式下依次应用所有更新
- *
- * @param updates - 更新列表
- * @param templatesDir - 模板目录路径
- * @param currentDir - 当前项目目录
+ * 依次应用所有差异并输出进度。
  */
 export async function applyBatchUpdate(
   updates: PendingUpdate[],
   templatesDir: string,
   currentDir: string,
 ): Promise<void> {
-  for (const pending of updates) {
+  const progress = createProgressTracker(updates.length);
+
+  for (let index = 0; index < updates.length; index += 1) {
+    const pending = updates[index];
+
+    if (index === 0) {
+      await progress.start(pending.file.path);
+    } else {
+      await progress.next(pending.file.path);
+    }
+
     await applyUpdate(pending, templatesDir, currentDir);
   }
+
+  progress.finish();
 }
 
 /**
- * 删除文件并清理产生的空目录
- *
- * 删除文件后，尝试自底向上清理空目录，保持项目目录结构整洁。
- * 例如：删除 a/b/c/file.txt 后，如果 c、b、a 目录都为空，则全部删除。
+ * 删除目标文件后向上清理空目录。
  */
 async function applyFileDeletion(filePath: string, currentDir: string): Promise<void> {
   const targetPath = path.join(currentDir, filePath);
@@ -66,12 +63,7 @@ async function applyFileDeletion(filePath: string, currentDir: string): Promise<
 }
 
 /**
- * 应用 package.json 更新，同时保留项目名称
- *
- * 特殊处理逻辑：
- * - 从模板复制所有字段
- * - 但保留目标项目的 name 字段
- * - 这确保模板更新不会意外改变项目名称
+ * 更新 `package.json`，同时保留项目原有名称。
  */
 async function applyPackageJsonUpdate(pending: PendingUpdate, sourcePath: string, targetPath: string): Promise<void> {
   const sourceRaw = await fs.readFile(sourcePath, 'utf-8');
@@ -86,11 +78,7 @@ async function applyPackageJsonUpdate(pending: PendingUpdate, sourcePath: string
 }
 
 /**
- * 应用普通文件更新（直接复制）
- *
- * 简单的文件复制操作：
- * - 确保目标目录存在
- * - 从模板复制文件到项目
+ * 将普通文件从模板复制到项目目录。
  */
 async function applyRegularFileUpdate(pending: PendingUpdate, sourcePath: string, targetPath: string): Promise<void> {
   await fs.mkdir(path.dirname(targetPath), { recursive: true });
@@ -101,12 +89,7 @@ async function applyRegularFileUpdate(pending: PendingUpdate, sourcePath: string
 }
 
 /**
- * 检查是否是预期的文件系统错误
- *
- * 这些错误是正常的，不需要警告用户：
- * - ENOENT: 目录已不存在
- * - ENOTEMPTY: 目录非空
- * - EACCES: 权限问题
+ * 判断目录清理时可忽略的常见文件系统错误。
  */
 function isExpectedCleanupError(error: unknown): boolean {
   if (!(error instanceof Error)) {
@@ -118,12 +101,7 @@ function isExpectedCleanupError(error: unknown): boolean {
 }
 
 /**
- * 自底向上删除空目录
- *
- * 删除文件后清理产生的空目录层级，避免留下无用的目录结构
- *
- * @param startDir - 起始目录（通常是已删除文件的父目录）
- * @param stopDir - 停止目录（通常是项目根目录）
+ * 从删除位置向上移除空目录，直到遇到项目根或非空目录。
  */
 async function cleanupEmptyDirs(startDir: string, stopDir: string): Promise<void> {
   try {
@@ -141,7 +119,7 @@ async function cleanupEmptyDirs(startDir: string, stopDir: string): Promise<void
       currentDir = path.dirname(currentDir);
     }
   } catch (error) {
-    // 只忽略预期的文件系统错误（如目录不存在、非空、权限问题）
+    // 忽略常见的文件系统竞态，其余异常保留日志。
     if (!isExpectedCleanupError(error)) {
       logger.warn(
         `Warning: Unexpected error during directory cleanup: ${error instanceof Error ? error.message : String(error)}`,

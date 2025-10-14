@@ -1,6 +1,5 @@
 /**
- * 文件系统扫描模块
- * 负责遍历模板和项目目录，收集文件列表
+ * 扫描模板与项目文件，用于后续差异分析。
  */
 
 import { promises as fs } from 'node:fs';
@@ -10,11 +9,7 @@ import { IGNORED_PROJECT_ENTRIES, IGNORED_TEMPLATE_ENTRIES } from './constants.j
 import type { FileUpdate, IgnoreMatcher } from './types.js';
 
 /**
- * 扫描模板目录，收集所有需要同步的文件
- *
- * @param templatesDir - 模板目录路径
- * @param shouldIgnore - 忽略规则匹配器
- * @returns 模板文件列表
+ * 扫描模板目录并收集需要同步的文件。
  */
 export async function scanTemplateFiles(templatesDir: string, shouldIgnore: IgnoreMatcher): Promise<FileUpdate[]> {
   const files: FileUpdate[] = [];
@@ -23,7 +18,7 @@ export async function scanTemplateFiles(templatesDir: string, shouldIgnore: Igno
 }
 
 /**
- * 递归遍历目录并记录文件路径
+ * 递归扫描模板目录。
  */
 async function scanDirectory(
   dirPath: string,
@@ -56,14 +51,14 @@ async function scanDirectory(
 }
 
 /**
- * 检查目录项是否应该被跳过
+ * 判断模板目录项是否需要跳过。
  */
 function shouldSkipTemplateEntry(entryName: string): boolean {
   return IGNORED_TEMPLATE_ENTRIES.has(entryName);
 }
 
 /**
- * 处理目录扫描中的单个文件
+ * 把扫描到的文件写入结果列表。
  */
 function processScannedFile(files: FileUpdate[], relativePath: string): void {
   files.push({
@@ -73,12 +68,7 @@ function processScannedFile(files: FileUpdate[], relativePath: string): void {
 }
 
 /**
- * 提取模板文件的顶级目录
- *
- * 用于限定项目扫描范围，只扫描与模板相关的目录
- *
- * @param files - 模板文件列表
- * @returns 顶级目录名集合
+ * 提取模板文件的顶级目录，限定项目扫描范围。
  */
 export function getTopLevelEntries(files: FileUpdate[]): Set<string> {
   const entries = new Set<string>();
@@ -92,14 +82,7 @@ export function getTopLevelEntries(files: FileUpdate[]): Set<string> {
 }
 
 /**
- * 按模板目录，扫描项目中待对齐的文件并收集路径
- *
- * 只扫描与模板顶级目录对应的项目目录
- *
- * @param currentDir - 当前项目目录
- * @param templateFiles - 模板文件列表
- * @param shouldIgnore - 忽略规则匹配器
- * @returns 项目文件路径集合
+ * 扫描项目中与模板顶级目录对应的文件。
  */
 export async function scanProjectFiles(
   currentDir: string,
@@ -135,7 +118,7 @@ export async function scanProjectFiles(
 }
 
 /**
- * 递归记录项目目录中的文件路径
+ * 递归扫描项目目录。
  */
 async function scanProjectDirectory(
   dirPath: string,
@@ -168,7 +151,7 @@ async function scanProjectDirectory(
 }
 
 /**
- * 检查项目目录项是否应该被跳过
+ * 判断项目目录项是否需要跳过。
  */
 function shouldSkipProjectEntry(entryName: string): boolean {
   return IGNORED_PROJECT_ENTRIES.has(entryName);

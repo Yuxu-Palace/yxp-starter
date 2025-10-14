@@ -1,6 +1,5 @@
 /**
- * 更新处理器配置
- * 使用策略模式定义不同文件类型的更新策略
+ * 定义更新流程中用到的各类处理器。
  */
 
 import { promises as fs } from 'node:fs';
@@ -12,7 +11,7 @@ import { SKIPPED_DYNAMIC_FILES } from './constants.js';
 import type { DiffSummary, FileUpdate, PendingUpdate, TemplateUpdateHandler } from './types.js';
 
 /**
- * 构建文件新增的更新记录
+ * 生成模板中新文件的新增操作。
  */
 export async function buildAdditionUpdates(file: FileUpdate, sourcePath: string): Promise<PendingUpdate[]> {
   const templateRead = await readFileContent(sourcePath);
@@ -46,11 +45,7 @@ export async function buildAdditionUpdates(file: FileUpdate, sourcePath: string)
 }
 
 /**
- * 构建 package.json 更新记录
- *
- * 特殊处理逻辑：
- * - 标准化格式化，避免空格/换行差异导致的误报
- * - 保留目标项目的 name 字段
+ * 生成 `package.json` 的差异记录并保留项目名称。
  */
 export async function buildPackageJsonUpdates(
   file: FileUpdate,
@@ -84,7 +79,7 @@ export async function buildPackageJsonUpdates(
 }
 
 /**
- * 构建已存在文件的更新记录
+ * 处理模板与项目中已有文件的内容差异。
  */
 export async function buildExistingFileUpdates(
   file: FileUpdate,
@@ -114,7 +109,6 @@ export async function buildExistingFileUpdates(
   }
 
   const stats = getDiffStats(targetRead.content, sourceRead.content);
-  logDiffResult('modify', file.path, stats);
   return [
     {
       kind: 'modify',
@@ -128,16 +122,11 @@ export async function buildExistingFileUpdates(
 }
 
 /**
- * 获取模板更新处理器列表
- *
- * 使用责任链模式（Chain of Responsibility）：
- * - 每个处理器检查是否匹配当前文件
- * - 第一个匹配的处理器负责处理该文件
- * - 处理器按优先级排序
+ * 返回责任链，按顺序匹配并生成对应的更新操作。
  */
 export function getTemplateUpdateHandlers(): TemplateUpdateHandler[] {
   return [
-    // 1. 被忽略的文件 - 直接跳过
+    // 忽略规则命中的文件
     {
       matches: ({ file, shouldIgnore }) => shouldIgnore(file.path, false),
       handle: async ({ file, projectFiles }) => {
@@ -146,7 +135,7 @@ export function getTemplateUpdateHandlers(): TemplateUpdateHandler[] {
       },
     },
 
-    // 2. 动态内容文件（README.md, .yxpignore） - 跳过更新
+    // 带动态内容的文件（如 README、.yxpignore）
     {
       matches: ({ file }) => SKIPPED_DYNAMIC_FILES.has(file.path),
       handle: async ({ file, projectFiles }) => {
@@ -155,13 +144,13 @@ export function getTemplateUpdateHandlers(): TemplateUpdateHandler[] {
       },
     },
 
-    // 3. 项目中不存在的文件 - 标记为新增
+    // 项目中缺失的文件
     {
       matches: async ({ targetPath }) => !(await fileExists(targetPath)),
       handle: async ({ file, sourcePath }) => buildAdditionUpdates(file, sourcePath),
     },
 
-    // 4. package.json - 特殊处理（保留项目名称）
+    // 针对 package.json 保留项目名称
     {
       matches: ({ file }) => file.path === 'package.json',
       handle: async ({ file, sourcePath, targetPath, projectFiles }) => {
@@ -170,7 +159,7 @@ export function getTemplateUpdateHandlers(): TemplateUpdateHandler[] {
       },
     },
 
-    // 5. 默认处理器 - 处理普通文件修改
+    // 默认处理器
     {
       matches: async () => true,
       handle: async ({ file, sourcePath, targetPath, projectFiles }) => {

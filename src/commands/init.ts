@@ -8,10 +8,12 @@ import { copyDirectory, fileExists, readJsonFile, writeJsonFile } from '../utils
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 模板中需要忽略的目录或文件，防止复制依赖和构建产物。
+// 复制模板时跳过这些目录
 const TEMPLATE_IGNORE_ENTRIES = new Set(['node_modules', '.pnpm', 'dist']);
 
-// 将模板目录内容完整复制到目标目录（保留原有目录结构）。
+/**
+ * 将模板文件复制到目标目录。
+ */
 async function copyTemplateContents(templatesDir: string, targetDir: string): Promise<void> {
   const entries = await fs.readdir(templatesDir, { withFileTypes: true });
 
@@ -24,48 +26,43 @@ async function copyTemplateContents(templatesDir: string, targetDir: string): Pr
     const destinationPath = path.join(targetDir, entry.name);
 
     if (entry.isDirectory()) {
-      // 目录采用递归拷贝，保持层级结构。
       await copyDirectory(sourcePath, destinationPath);
       console.log(chalk.green(`✓ Copied ${entry.name}/`));
     } else {
-      // 普通文件直接复制。
       await fs.copyFile(sourcePath, destinationPath);
       console.log(chalk.green(`✓ Copied ${entry.name}`));
     }
   }
 }
 
-// CLI init 子命令：根据模板创建一个新的项目目录。
+/**
+ * 初始化新项目。
+ */
 export async function init(projectName: string): Promise<void> {
   console.log(chalk.blue(`\n🚀 Initializing YXP project: ${projectName}\n`));
 
   const targetDir = path.resolve(process.cwd(), projectName);
   const templatesDir = path.resolve(__dirname, '../../templates');
 
-  // 1. 确保目标目录尚不存在。
   if (await fileExists(targetDir)) {
     console.log(chalk.red(`❌ Directory ${projectName} already exists!`));
     process.exit(1);
   }
 
   try {
-    // 2. 创建项目目录结构。
     await fs.mkdir(targetDir, { recursive: true });
     console.log(chalk.green(`✓ Created directory: ${projectName}`));
 
-    // 3. 将模板文件复制到项目目录。
     console.log(chalk.blue('\n📦 Copying template files...'));
     await copyTemplateContents(templatesDir, targetDir);
 
     console.log(chalk.blue('\n🪄 Customizing template placeholders...'));
     await applyTemplatePlaceholders(targetDir, projectName);
 
-    // 4. 将 package.json 中的名称替换为项目名。
     console.log(chalk.blue('\n📝 Customizing package.json...'));
     await customizePackageJson(targetDir, projectName);
     console.log(chalk.green('✓ Customized package.json'));
 
-    // 5. 完成初始化并输出后续指引。
     console.log(chalk.green(`\n✅ Project ${projectName} created successfully!\n`));
     console.log(chalk.cyan('Next steps:'));
     console.log(chalk.gray(`  cd ${projectName}`));
@@ -84,7 +81,9 @@ type TemplatePackageJson = {
   [key: string]: unknown;
 };
 
-// 替换模板中的占位符，例如 README 里的 {{projectName}}。
+/**
+ * 替换模板文件中的占位符（例如 README 内的 {{projectName}}）。
+ */
 async function applyTemplatePlaceholders(targetDir: string, projectName: string): Promise<void> {
   const filesToCustomize = ['README.md'];
 
@@ -95,7 +94,6 @@ async function applyTemplatePlaceholders(targetDir: string, projectName: string)
     }
 
     const content = await fs.readFile(absolutePath, 'utf-8');
-    // 使用全局正则替换所有 {{projectName}} 占位符。
     const replaced = content.replace(/{{projectName}}/g, projectName);
 
     if (content !== replaced) {
@@ -105,7 +103,9 @@ async function applyTemplatePlaceholders(targetDir: string, projectName: string)
   }
 }
 
-// 调整 package.json：设置项目名并移除模板特有依赖。
+/**
+ * 更新 package.json，写入项目名并移除模板依赖。
+ */
 async function customizePackageJson(targetDir: string, projectName: string): Promise<void> {
   const packagePath = path.join(targetDir, 'package.json');
   if (!(await fileExists(packagePath))) {
@@ -114,14 +114,13 @@ async function customizePackageJson(targetDir: string, projectName: string): Pro
   }
 
   const packageJson = await readJsonFile<TemplatePackageJson>(packagePath);
-  // 将项目名称替换为用户指定的名称。
   packageJson.name = projectName;
   if (!packageJson.devDependencies) {
     packageJson.devDependencies = {};
   }
 
   if (packageJson.devDependencies['yxp-starter']) {
-    // 模板自身依赖仅在模板项目里需要，初始化后移除。
+    // 模板依赖仅在模板项目需要，初始化后移除
     const { 'yxp-starter': _removed, ...rest } = packageJson.devDependencies;
     packageJson.devDependencies = rest;
   }
