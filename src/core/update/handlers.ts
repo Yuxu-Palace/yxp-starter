@@ -11,7 +11,15 @@ import { SKIPPED_DYNAMIC_FILES } from './constants.js';
 import type { DiffSummary, FileUpdate, PendingUpdate, TemplateUpdateHandler } from './types.js';
 
 /**
- * 生成模板中新文件的新增操作。
+ * Produce pending add updates for a template file that does not exist in the target.
+ *
+ * For binary templates returns a single `add` update with `isBinary: true` and `stats` set to `null`.
+ * For text templates returns a single `add` update with `isBinary: false`, `sourceContent` set to the template content,
+ * `targetContent` set to an empty string, and `stats` computed from the empty target to the template content.
+ *
+ * @param file - Metadata describing the template file to add
+ * @param sourcePath - Filesystem path to the template source file
+ * @returns An array containing a single `PendingUpdate` representing the add operation for the file
  */
 export async function buildAdditionUpdates(file: FileUpdate, sourcePath: string): Promise<PendingUpdate[]> {
   const templateRead = await readFileContent(sourcePath);
@@ -45,7 +53,11 @@ export async function buildAdditionUpdates(file: FileUpdate, sourcePath: string)
 }
 
 /**
- * 生成 `package.json` 的差异记录并保留项目名称。
+ * Produce update(s) for package.json while preserving the existing project name.
+ *
+ * Reads, sanitizes, and compares the source and target package.json contents using the target's package name so that the project name is preserved; if they differ, returns a single pending modify update with computed diff stats.
+ *
+ * @returns An array containing one `PendingUpdate` for a `'modify'` of `package.json` with `sourceContent` and `targetContent` set to the sanitized contents and `stats` set to the diff metrics, or an empty array if no changes are detected.
  */
 export async function buildPackageJsonUpdates(
   file: FileUpdate,
@@ -79,7 +91,15 @@ export async function buildPackageJsonUpdates(
 }
 
 /**
- * 处理模板与项目中已有文件的内容差异。
+ * Determines updates needed when a template file differs from an existing project file.
+ *
+ * @param file - Metadata for the template file being compared.
+ * @param sourcePath - Filesystem path to the template source file.
+ * @param targetPath - Filesystem path to the existing project file.
+ * @returns An array of pending updates:
+ * - Empty array if the files are identical.
+ * - A single binary `modify` update with `isBinary: true` if either side is binary and contents differ.
+ * - A single text `modify` update with `isBinary: false`, `stats` from the diff, and `sourceContent`/`targetContent` when both sides are text and differ.
  */
 export async function buildExistingFileUpdates(
   file: FileUpdate,
@@ -122,7 +142,11 @@ export async function buildExistingFileUpdates(
 }
 
 /**
- * 返回责任链，按顺序匹配并生成对应的更新操作。
+ * Provide an ordered chain of template update handlers that match files and generate pending updates.
+ *
+ * Each handler is evaluated in sequence and may remove the processed file from the `projectFiles` set.
+ *
+ * @returns An array of TemplateUpdateHandler objects evaluated in order; each handler produces zero or more PendingUpdate entries for the matched file.
  */
 export function getTemplateUpdateHandlers(): TemplateUpdateHandler[] {
   return [

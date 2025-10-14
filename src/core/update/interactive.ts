@@ -77,7 +77,14 @@ const ACTION_HANDLERS: Record<UpdateAction, UpdateActionHandler> = {
 };
 
 /**
- * 逐个提示用户处理待更新文件。
+ * Interactively prompts the user to handle a list of pending file updates.
+ *
+ * Processes each pending update in order, displaying progress and executing the user's chosen action.
+ * If the user selects a terminal action (e.g., apply-all or skip-all), remaining updates may be applied in batch or skipped and the interactive loop will stop early.
+ *
+ * @param updates - Pending updates to present to the user
+ * @param templatesDir - Filesystem path to the templates directory used when applying updates
+ * @param currentDir - Filesystem path to the current working directory where updates will be applied
  */
 export async function runInteractiveUpdate(
   updates: PendingUpdate[],
@@ -108,7 +115,13 @@ export async function runInteractiveUpdate(
 }
 
 /**
- * 提示用户为当前差异选择操作。
+ * Prompt the user to choose an action for a pending file update.
+ *
+ * Shows a diff preview for text files (skips preview for binary files), presents a menu
+ * tailored to the update kind and formatted stats, and returns the user's selection.
+ *
+ * @param pendingUpdate - The pending update to present to the user
+ * @returns `'update' | 'skip' | 'update-all' | 'skip-all'` indicating the chosen action
  */
 async function promptUpdateAction(
   pendingUpdate: PendingUpdate,
@@ -138,7 +151,11 @@ async function promptUpdateAction(
 }
 
 /**
- * 根据差异类型构造 prompts 的菜单配置。
+ * Build the prompt message and choice list for a pending update based on its diff kind and stats.
+ *
+ * @param pendingUpdate - The pending update to prompt for (includes file path and kind).
+ * @param statsLabel - Human-readable stats label to include in the prompt message.
+ * @returns An object containing `message` (the prompt text) and `choices` (an array of options with `title` and `value`).
  */
 function buildPromptConfig(
   pendingUpdate: PendingUpdate,

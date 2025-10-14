@@ -9,7 +9,11 @@ import { IGNORED_PROJECT_ENTRIES, IGNORED_TEMPLATE_ENTRIES } from './constants.j
 import type { FileUpdate, IgnoreMatcher } from './types.js';
 
 /**
- * 扫描模板目录并收集需要同步的文件。
+ * Recursively scans a templates directory and collects template files that should be considered for synchronization.
+ *
+ * @param templatesDir - Root templates directory to scan; result paths are relative to this directory.
+ * @param shouldIgnore - Predicate called with `(relativePath, isDirectory)` that returns `true` for paths to ignore.
+ * @returns An array of `FileUpdate` entries describing each template file to consider for synchronization.
  */
 export async function scanTemplateFiles(templatesDir: string, shouldIgnore: IgnoreMatcher): Promise<FileUpdate[]> {
   const files: FileUpdate[] = [];
@@ -18,7 +22,12 @@ export async function scanTemplateFiles(templatesDir: string, shouldIgnore: Igno
 }
 
 /**
- * 递归扫描模板目录。
+ * Recursively scans a template directory and adds non-ignored files to the provided FileUpdate accumulator.
+ *
+ * @param dirPath - Absolute path of the directory to scan
+ * @param basePath - Base path used to compute each file's relative path that will be stored in the accumulator
+ * @param files - Accumulator array that will receive FileUpdate entries for discovered template files
+ * @param shouldIgnore - Predicate called as `shouldIgnore(relativePath, isDirectory)`; if it returns `true` the entry is skipped
  */
 async function scanDirectory(
   dirPath: string,
@@ -51,14 +60,20 @@ async function scanDirectory(
 }
 
 /**
- * 判断模板目录项是否需要跳过。
+ * Determines whether a single template directory entry should be skipped.
+ *
+ * @param entryName - The directory or file name at the template root to check
+ * @returns `true` if the entry is present in the set of ignored template entries, `false` otherwise
  */
 function shouldSkipTemplateEntry(entryName: string): boolean {
   return IGNORED_TEMPLATE_ENTRIES.has(entryName);
 }
 
 /**
- * 把扫描到的文件写入结果列表。
+ * Append a scanned template file entry to the results list.
+ *
+ * @param files - Array to receive the new FileUpdate entry
+ * @param relativePath - Path of the scanned file relative to the templates root
  */
 function processScannedFile(files: FileUpdate[], relativePath: string): void {
   files.push({
@@ -68,7 +83,14 @@ function processScannedFile(files: FileUpdate[], relativePath: string): void {
 }
 
 /**
- * 提取模板文件的顶级目录，限定项目扫描范围。
+ * Build a set of top-level path segments from a list of template file entries.
+ *
+ * Each FileUpdate's `path` is split by the platform path separator and the first
+ * segment is added to the returned set; if a path has no separator, the full
+ * path is used as the top-level entry.
+ *
+ * @param files - Array of FileUpdate objects whose `path` fields are relative paths
+ * @returns A Set containing the top-level directory or file name for each entry in `files`
  */
 export function getTopLevelEntries(files: FileUpdate[]): Set<string> {
   const entries = new Set<string>();
@@ -82,7 +104,12 @@ export function getTopLevelEntries(files: FileUpdate[]): Set<string> {
 }
 
 /**
- * 扫描项目中与模板顶级目录对应的文件。
+ * Collects project file paths that correspond to the template set's top-level entries.
+ *
+ * @param currentDir - Root directory of the project to scan; returned paths are relative to this directory
+ * @param templateFiles - Template file descriptors used to derive top-level entries to check in the project
+ * @param shouldIgnore - Predicate called as `(relativePath, isDirectory)` that returns `true` for paths to skip
+ * @returns A Set of relative paths (relative to `currentDir`) that exist in the project and match the template top-level entries
  */
 export async function scanProjectFiles(
   currentDir: string,
@@ -118,7 +145,12 @@ export async function scanProjectFiles(
 }
 
 /**
- * 递归扫描项目目录。
+ * Recursively scans a project directory and adds relative file paths for non-ignored files to `files`.
+ *
+ * @param dirPath - Absolute path of the directory to scan
+ * @param basePath - Base path used to compute each file's relative path before adding to `files`
+ * @param files - Set that will be populated with relative file paths found under `dirPath`
+ * @param shouldIgnore - Function that determines whether a path should be ignored; called as `shouldIgnore(relativePath, isDirectory)`
  */
 async function scanProjectDirectory(
   dirPath: string,
@@ -151,7 +183,10 @@ async function scanProjectDirectory(
 }
 
 /**
- * 判断项目目录项是否需要跳过。
+ * Determines whether a project directory entry should be skipped.
+ *
+ * @param entryName - The name of the directory entry (file or folder)
+ * @returns `true` if `entryName` is listed in `IGNORED_PROJECT_ENTRIES`, `false` otherwise
  */
 function shouldSkipProjectEntry(entryName: string): boolean {
   return IGNORED_PROJECT_ENTRIES.has(entryName);

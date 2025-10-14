@@ -7,14 +7,20 @@ import { JSON_INDENT_SPACES, JSON_TRAILING_NEWLINE } from '../core/update/consta
 import { fileExists } from './fs.js';
 
 /**
- * 验证 package name 是否有效，方便类型收窄。
+ * Checks whether a value is a non-empty package name.
+ *
+ * @param name - Candidate package name to validate
+ * @returns `true` if `name` is a string with length greater than zero, `false` otherwise.
  */
 export function isValidPackageName(name: string | undefined): name is string {
   return typeof name === 'string' && name.length > 0;
 }
 
 /**
- * 按统一缩进与换行格式化 package.json。
+ * Serialize a package.json object to a consistently formatted JSON string.
+ *
+ * @param packageObject - The package.json value to serialize
+ * @returns The JSON representation of `packageObject` using a fixed indentation and a trailing newline
  */
 export function formatPackageJson(packageObject: unknown): string {
   const serialized = JSON.stringify(packageObject, null, JSON_INDENT_SPACES);
@@ -22,7 +28,10 @@ export function formatPackageJson(packageObject: unknown): string {
 }
 
 /**
- * 从 package.json 字符串中解析出项目名。
+ * Extracts the `name` field from package.json content.
+ *
+ * @param content - The raw JSON text of a package.json file
+ * @returns The package name if present and a string, `undefined` otherwise
  */
 export function getPackageName(content: string): string | undefined {
   try {
@@ -34,7 +43,11 @@ export function getPackageName(content: string): string | undefined {
 }
 
 /**
- * 统一 package.json 内容，可选地覆盖项目名称。
+ * Normalize package.json content and optionally enforce a specific package name.
+ *
+ * @param content - The original package.json text to parse and format.
+ * @param enforcedName - When provided and a valid package name, replaces the `name` field in the output.
+ * @returns The formatted package.json string with standardized indentation and a trailing newline; if `content` is not valid JSON, returns the original `content` unchanged.
  */
 export function sanitizePackageJsonContent(content: string, enforcedName?: string): string {
   try {
@@ -49,7 +62,10 @@ export function sanitizePackageJsonContent(content: string, enforcedName?: strin
 }
 
 /**
- * 读取项目自身的 package name，更新时用于保留名称。
+ * Retrieve the package name declared in the package.json at the provided path.
+ *
+ * @param targetPath - Filesystem path to the package.json file to read.
+ * @returns The `name` value from the file, or an empty string if the file does not exist, the `name` is missing, or the file cannot be parsed.
  */
 export async function getTargetPackageName(targetPath: string): Promise<string> {
   if (!(await fileExists(targetPath))) {

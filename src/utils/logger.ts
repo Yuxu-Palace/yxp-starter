@@ -48,7 +48,10 @@ export const logger = {
 };
 
 /**
- * 将差异统计格式化为彩色字符串。
+ * Format a diff summary into a colored textual representation.
+ *
+ * @param stats - Diff summary containing `added` and `removed` counts; if falsy, indicates a binary file
+ * @returns The formatted string — `(+<added> -<removed>)` with color highlighting, or `'(binary file)'` when `stats` is falsy
  */
 export function formatStats(stats: DiffSummary): string {
   if (!stats) {
@@ -58,7 +61,11 @@ export function formatStats(stats: DiffSummary): string {
 }
 
 /**
- * 打印文件差异结果，附带彩色徽章。
+ * Prints a colorized diff line showing an update badge, the file path, and formatted diff statistics.
+ *
+ * @param kind - The type of update (`add`, `modify`, or `delete`) used to select badge and path colors
+ * @param filePath - The file path to display
+ * @param stats - Diff summary (added/removed counts); when falsy, indicates a binary/file-without-text diff
  */
 export function logDiffResult(kind: UpdateKind, filePath: string, stats: DiffSummary): void {
   const styles: Record<UpdateKind, { badge: (text: string) => string; colorizePath: (text: string) => string }> = {

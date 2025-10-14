@@ -6,7 +6,11 @@ import chalk from 'chalk';
 import type { PendingUpdate } from '../core/update/types.js';
 
 /**
- * 按更新类型分组展示待处理文件。
+ * Display a grouped, colored console summary of pending file updates.
+ *
+ * Prints sections for Modified, Added, and Deleted files (when present), each prefixed with a count and listing per-file entries with brief change statistics.
+ *
+ * @param updates - Pending updates to summarize; each entry must include the file path and metadata used to render the per-file line
  */
 export function showUpdateSummary(updates: PendingUpdate[]): void {
   const grouped = groupUpdatesByKind(updates);
@@ -45,7 +49,10 @@ export function showUpdateSummary(updates: PendingUpdate[]): void {
 }
 
 /**
- * 按更新类型分组。
+ * Group pending updates into buckets by their `kind` ("modify", "add", "delete").
+ *
+ * @param updates - Array of pending update entries to group
+ * @returns An object with keys `modify`, `add`, and `delete`, each containing the array of updates for that kind
  */
 function groupUpdatesByKind(updates: PendingUpdate[]): Record<string, PendingUpdate[]> {
   const grouped: Record<string, PendingUpdate[]> = {
@@ -62,7 +69,14 @@ function groupUpdatesByKind(updates: PendingUpdate[]): Record<string, PendingUpd
 }
 
 /**
- * 格式化差异统计。
+ * Format change statistics for a pending update.
+ *
+ * Returns `' (binary)'` when the update is a binary file or has no stats,
+ * an empty string when both additions and deletions are zero, or a parenthesized
+ * string containing colored `+N` and/or `-M` parts for additions and deletions.
+ *
+ * @param update - The pending update whose `isBinary` flag and `stats` (`added`, `removed`) are used to produce the formatted string
+ * @returns `' (binary)'` for binary or missing stats, `''` when there are no changes, or a string like ` (+N -M)` with additions in green and deletions in red
  */
 function formatStats(update: PendingUpdate): string {
   if (update.isBinary || !update.stats) {

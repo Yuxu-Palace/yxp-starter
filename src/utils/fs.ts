@@ -4,7 +4,16 @@ import path from 'node:path';
 // 二进制检测时采样的最大字节数，用于兼顾准确度与性能。
 const BINARY_SAMPLE_SIZE = 4096;
 
-// 粗略判断 Buffer 是否包含大量非文本字符，用于识别二进制文件。
+/**
+ * Detects whether a Buffer likely contains binary data.
+ *
+ * An empty buffer is considered not binary. The function examines up to the first
+ * 4096 bytes and flags the buffer as binary when it encounters a NUL byte or when
+ * more than 30% of sampled bytes are outside common printable ASCII/control ranges.
+ *
+ * @param buffer - The Buffer to inspect for binary content
+ * @returns `true` if the buffer is considered binary, `false` otherwise.
+ */
 function isBinaryBuffer(buffer: Buffer): boolean {
   const length = buffer.length;
   if (length === 0) {
@@ -39,7 +48,9 @@ export type FileReadResult =
   | { raw: Buffer; content: Buffer; isBinary: true };
 
 /**
- * 根据文件类型返回字符串或 Buffer，避免误把二进制内容当作文本。
+ * Read a file and provide its content in a form appropriate for text or binary files.
+ *
+ * @returns An object with the raw file `Buffer` in `raw`, a `content` property that is a decoded UTF-8 `string` for text files or the raw `Buffer` for binary files, and an `isBinary` boolean indicating which form `content` holds.
  */
 export async function readFileContent(filePath: string): Promise<FileReadResult> {
   const buffer = await fs.readFile(filePath);
@@ -51,7 +62,10 @@ export async function readFileContent(filePath: string): Promise<FileReadResult>
 }
 
 /**
- * 递归复制目录，保持原有结构。
+ * Recursively copy the contents of one directory to another, preserving the directory structure.
+ *
+ * @param src - Path of the source directory to copy from
+ * @param dest - Path of the destination directory to copy into; parent directories will be created as needed
  */
 export async function copyDirectory(src: string, dest: string): Promise<void> {
   await fs.mkdir(dest, { recursive: true });
@@ -70,7 +84,10 @@ export async function copyDirectory(src: string, dest: string): Promise<void> {
 }
 
 /**
- * 检查文件是否存在，使用 access 避免抛出异常。
+ * Checks whether a filesystem path exists and is accessible.
+ *
+ * @param filePath - Path to the file or directory to check
+ * @returns `true` if the path exists and is accessible, `false` otherwise
  */
 export async function fileExists(filePath: string): Promise<boolean> {
   try {
@@ -82,7 +99,10 @@ export async function fileExists(filePath: string): Promise<boolean> {
 }
 
 /**
- * 读取 JSON 文件并反序列化。
+ * Read and parse a JSON file from disk.
+ *
+ * @param filePath - Path to the JSON file.
+ * @returns The parsed JSON value typed as `T`.
  */
 export async function readJsonFile<T = unknown>(filePath: string): Promise<T> {
   const content = await fs.readFile(filePath, 'utf-8');
@@ -90,7 +110,12 @@ export async function readJsonFile<T = unknown>(filePath: string): Promise<T> {
 }
 
 /**
- * 以统一的缩进与换行格式写入 JSON。
+ * Write a value to a file as formatted JSON using two-space indentation and a trailing newline.
+ *
+ * Serializes `data` to JSON with 2-space indentation, appends a newline, and overwrites or creates `filePath`.
+ *
+ * @param filePath - Destination filesystem path for the JSON file
+ * @param data - The value to serialize to JSON
  */
 export async function writeJsonFile(filePath: string, data: unknown): Promise<void> {
   await fs.writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`);

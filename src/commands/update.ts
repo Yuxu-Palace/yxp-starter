@@ -18,7 +18,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * 验证当前目录是否满足更新前置条件。
+ * Verify that the given directory contains a package.json indicating a Node project.
+ *
+ * @param currentDir - Filesystem path of the directory to validate
+ * @returns `true` if `package.json` exists in `currentDir`; exits the process with code 1 if not found.
  */
 async function validateProjectContext(currentDir: string): Promise<boolean> {
   const packageJsonPath = path.join(currentDir, 'package.json');
@@ -32,11 +35,15 @@ async function validateProjectContext(currentDir: string): Promise<boolean> {
 }
 
 /**
- * 执行更新命令。
+ * Synchronizes template files into the current project directory.
  *
- * @param options - 命令选项
- * @param options.all - 批量更新全部文件
- * @param options.skipAll - 预览模式，不执行更新
+ * Performs a scan for pending template updates, shows a summary, and then either performs
+ * no changes (dry run), applies all updates in batch, or runs an interactive update flow
+ * based on the provided options.
+ *
+ * @param options - Command options that control update behavior
+ * @param options.all - If true, apply all pending updates without prompting
+ * @param options.skipAll - If true, perform a preview only and do not modify files
  */
 export async function update(options: UpdateOptions = {}): Promise<void> {
   logger.info('\n🔄 Updating project from yxp-starter...\n');

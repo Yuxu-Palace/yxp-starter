@@ -10,7 +10,13 @@ import { fileExists } from './fs.js';
 import { toPosixPath } from './path.js';
 
 /**
- * 从 `.yxpignore` 构造忽略匹配器，不存在时返回总是允许的匹配器。
+ * Create a matcher from a .yxpignore file in the given directory.
+ *
+ * If a .yxpignore file is present, the matcher evaluates paths against its patterns; otherwise the matcher allows everything.
+ *
+ * @returns An object with:
+ * - `ignores(relativePath: string, isDirectory?: boolean)` — `true` if the given relative path is matched by the .yxpignore rules, `false` otherwise. Directory checks test both the path with a trailing slash and without. A falsy `relativePath` always yields `false`.
+ * - `hasPatterns` — `true` if the .yxpignore file contains any non-whitespace content, `false` otherwise.
  */
 export async function createIgnoreMatcher(
   currentDir: string,

@@ -32,11 +32,9 @@ function getBaseCtx<T extends Partial<Context> & Pick<Context, 'format' | 'IS_CI
 }
 
 /**
- * 本地模式下测试源码
+ * Run the given test function for each build format, loading source code locally and built artifacts in CI.
  *
- * CI 模式下测试打包产物
- *
- * @param testFunc 测试函数
+ * @param testFunc - Callback invoked with the imported module and a Context for the current format; may perform asynchronous work
  */
 export function MFT(testFunc: (module: Module, ctx: Context) => void | Promise<void>) {
   describe.each(Object.values(MODE))('multiple format test', async (format) => {

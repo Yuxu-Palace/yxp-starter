@@ -12,7 +12,12 @@ const __dirname = path.dirname(__filename);
 const TEMPLATE_IGNORE_ENTRIES = new Set(['node_modules', '.pnpm', 'dist']);
 
 /**
- * 将模板文件复制到目标目录。
+ * Copy files and subdirectories from a templates directory into the target directory while skipping configured ignore entries.
+ *
+ * This writes files and directories under `templatesDir` into `targetDir` and logs each copied entry. Entries listed in `TEMPLATE_IGNORE_ENTRIES` are not copied.
+ *
+ * @param templatesDir - Filesystem path of the source templates directory
+ * @param targetDir - Filesystem path of the destination project directory
  */
 async function copyTemplateContents(templatesDir: string, targetDir: string): Promise<void> {
   const entries = await fs.readdir(templatesDir, { withFileTypes: true });
@@ -36,7 +41,13 @@ async function copyTemplateContents(templatesDir: string, targetDir: string): Pr
 }
 
 /**
- * 初始化新项目。
+ * Create a new project directory from the bundled template, apply placeholders, and customize package.json.
+ *
+ * Creates the target directory, copies template files into it (skipping configured ignore entries), replaces template placeholders (e.g., `{{projectName}}`) in selected files, and updates the template's package.json with the given project name and removal of template-only devDependencies.
+ *
+ * @param projectName - Name of the new project and the directory to create
+ *
+ * Note: the process will exit with code 1 if the target directory already exists or if an unrecoverable error occurs during initialization.
  */
 export async function init(projectName: string): Promise<void> {
   console.log(chalk.blue(`\n🚀 Initializing YXP project: ${projectName}\n`));
@@ -82,7 +93,12 @@ type TemplatePackageJson = {
 };
 
 /**
- * 替换模板文件中的占位符（例如 README 内的 {{projectName}}）。
+ * Replace placeholder tokens in selected template files with the project name.
+ *
+ * Replaces occurrences of `{{projectName}}` in configured files (currently README.md) located under the provided directory.
+ *
+ * @param targetDir - Path to the project directory containing the template files
+ * @param projectName - Project name to substitute for `{{projectName}}` placeholders
  */
 async function applyTemplatePlaceholders(targetDir: string, projectName: string): Promise<void> {
   const filesToCustomize = ['README.md'];
@@ -104,7 +120,10 @@ async function applyTemplatePlaceholders(targetDir: string, projectName: string)
 }
 
 /**
- * 更新 package.json，写入项目名并移除模板依赖。
+ * Update package.json in the target directory: set the package name to `projectName` and remove the template-only devDependency `"yxp-starter"`.
+ *
+ * @param targetDir - Absolute path to the generated project directory containing package.json
+ * @param projectName - The name to set in package.json
  */
 async function customizePackageJson(targetDir: string, projectName: string): Promise<void> {
   const packagePath = path.join(targetDir, 'package.json');

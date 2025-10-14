@@ -2,7 +2,11 @@ import chalk from 'chalk';
 import { type Change, diffLines } from 'diff';
 
 /**
- * 以彩色文本形式打印两份内容的行级差异。
+ * Print a colored, line-by-line diff between two text contents for a file to the console.
+ *
+ * @param oldContent - Original content to compare
+ * @param newContent - New content to compare
+ * @param fileName - File name displayed in the diff header
  */
 export function showDiff(oldContent: string, newContent: string, fileName: string): void {
   console.log(chalk.cyan(`\n📝 Changes in ${fileName}:`));
@@ -37,7 +41,9 @@ export function showDiff(oldContent: string, newContent: string, fileName: strin
 }
 
 /**
- * 统计差异行数，便于生成摘要与提示。
+ * Compute the number of added and removed lines between two text versions.
+ *
+ * @returns An object `{ added, removed }` where `added` is the count of lines present in `newContent` but not in `oldContent`, and `removed` is the count of lines present in `oldContent` but not in `newContent`.
  */
 export function getDiffStats(oldContent: string, newContent: string): { added: number; removed: number } {
   const diff: Change[] = diffLines(oldContent, newContent);

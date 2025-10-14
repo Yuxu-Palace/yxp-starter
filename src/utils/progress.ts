@@ -141,7 +141,10 @@ export class ProgressTracker {
 }
 
 /**
- * 创建进度跟踪器实例。
+ * Create a ProgressTracker configured for the given total number of files.
+ *
+ * @param total - Total number of files to track
+ * @returns A new ProgressTracker instance configured with `total`
  */
 export function createProgressTracker(total: number): ProgressTracker {
   return new ProgressTracker(total);
