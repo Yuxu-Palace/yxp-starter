@@ -1,18 +1,18 @@
 {
-	"compilerOptions": {
-		"lib": ["ES2024"],
-		"target": "ES2024",
-		"module": "ESNext",
-		"baseUrl": "./",
-		"noEmit": true,
-		"strict": true,
-		"skipLibCheck": true,
-		"isolatedModules": true,
-		"resolveJsonModule": true,
-		"moduleResolution": "bundler",
-		"useDefineForClassFields": true,
-		"erasableSyntaxOnly": true,
-		"allowImportingTsExtensions": true
-	},
-	"include": ["src/cli"]
+  "compilerOptions": {
+    "lib": ["ES2024"],
+    "target": "ES2024",
+    "module": "ESNext",
+    "baseUrl": "./",
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "useDefineForClassFields": true,
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src"]
 }

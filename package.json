@@ -1,50 +1,53 @@
 {
-	"name": "@yuxu-palace/yxp-starter",
-	"version": "0.0.0",
-	"description": "Starter kit for YXP library projects with inheritable configs and CLI tools",
-	"scripts": {
-		"build": "tsc --project tsconfig.cli.json",
-		"dev": "tsc --project tsconfig.cli.json --watch",
-		"check": "biome check --write .",
-		"format": "biome format --write .",
-		"prepare": "husky",
-		"prepublishOnly": "pnpm run build"
-	},
-	"type": "module",
-	"bin": {
-		"yxp-start": "./bin/index.js"
-	},
-	"files": [
-		"bin",
-		"templates"
-	],
-	"keywords": [],
-	"author": "yuxu-palace",
-	"license": "MIT",
-	"devEngines": {
-		"runtime": {
-			"name": "node",
-			"version": ">=18.0.0"
-		},
-		"packageManager": {
-			"name": "pnpm"
-		}
-	},
-	"dependencies": {
-		"chalk": "^5.3.0",
-		"commander": "^12.1.0",
-		"diff": "^7.0.0",
-		"prompts": "^2.4.2"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.2.5",
-		"@commitlint/cli": "^19.8.1",
-		"@commitlint/config-conventional": "^19.8.1",
-		"@types/diff": "^6.0.0",
-		"@types/node": "^24.3.1",
-		"@types/prompts": "^2.4.9",
-		"husky": "^9.1.7",
-		"lint-staged": "^16.1.6",
-		"typescript": "^5.9.2"
-	}
+  "name": "@yuxu-palace/yxp-starter",
+  "version": "0.0.0",
+  "description": "Starter kit for YXP library projects with inheritable configs and CLI tools",
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "check": "biome check --write .",
+    "format": "biome format --write .",
+    "prepare": "husky",
+    "prepublishOnly": "pnpm run build",
+    "postbuild": "chmod +x bin/index.js"
+  },
+  "type": "module",
+  "bin": {
+    "yxp-start": "./bin/index.js"
+  },
+  "files": [
+    "bin",
+    "templates"
+  ],
+  "keywords": [],
+  "author": "yuxu-palace",
+  "license": "MIT",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=18.0.0"
+    },
+    "packageManager": {
+      "name": "pnpm"
+    }
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "diff": "^7.0.0",
+    "ignore": "^5.3.1",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.15.0",
+    "@biomejs/biome": "^2.2.5",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@types/diff": "^6.0.0",
+    "@types/node": "^24.3.1",
+    "@types/prompts": "^2.4.9",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.6",
+    "typescript": "^5.9.2"
+  }
 }
