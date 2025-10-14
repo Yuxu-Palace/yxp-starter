@@ -1,21 +1,22 @@
 /**
- * 解析 .yxpignore，提供 gitignore 风格的忽略能力。
+ * 提供 gitignore 风格的忽略能力。
  */
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import ignore from 'ignore';
+import { IGNORED_FILE_NAME } from '../core/update/constants.js';
 import type { IgnoreMatcher } from '../core/update/types.js';
 import { fileExists } from './fs.js';
 import { toPosixPath } from './path.js';
 
 /**
- * 从 `.yxpignore` 构造忽略匹配器，不存在时返回总是允许的匹配器。
+ * 构造忽略匹配器，不存在时返回总是允许的匹配器。
  */
 export async function createIgnoreMatcher(
   currentDir: string,
 ): Promise<{ ignores: IgnoreMatcher; hasPatterns: boolean }> {
-  const ignoreFilePath = path.join(currentDir, '.yxpignore');
+  const ignoreFilePath = path.join(currentDir, IGNORED_FILE_NAME);
 
   if (!(await fileExists(ignoreFilePath))) {
     return {

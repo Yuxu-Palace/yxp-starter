@@ -6,6 +6,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { applyBatchUpdate } from '../core/update/applier.js';
+import { IGNORED_FILE_NAME } from '../core/update/constants.js';
 import { collectPendingUpdates } from '../core/update/differ.js';
 import { runInteractiveUpdate } from '../core/update/interactive.js';
 import type { UpdateOptions } from '../core/update/types.js';
@@ -52,7 +53,7 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
 
     const { ignores: shouldIgnore, hasPatterns } = await createIgnoreMatcher(currentDir);
     if (hasPatterns) {
-      logger.note('Using ignore rules from .yxpignore');
+      logger.note(`Using ignore rules from ${IGNORED_FILE_NAME}`);
     }
 
     logger.info('📂 Scanning for updates...\n');

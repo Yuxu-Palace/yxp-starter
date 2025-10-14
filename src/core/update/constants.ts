@@ -8,6 +8,9 @@ import type { UpdateKind } from './types.js';
 export const JSON_INDENT_SPACES = 2;
 export const JSON_TRAILING_NEWLINE = '\n';
 
+/** 忽略文件名称 */
+export const IGNORED_FILE_NAME = '.yxpignore';
+
 /** 模板目录中无需同步的路径。 */
 export const IGNORED_TEMPLATE_ENTRIES = new Set(['node_modules', '.pnpm', '.git', 'dist']);
 
@@ -15,7 +18,7 @@ export const IGNORED_TEMPLATE_ENTRIES = new Set(['node_modules', '.pnpm', '.git'
 export const IGNORED_PROJECT_ENTRIES = new Set(['node_modules', '.git', 'dist', 'build', '.turbo', 'coverage']);
 
 /** 在比较时跳过的动态文件。 */
-export const SKIPPED_DYNAMIC_FILES = new Set(['README.md', 'readme.md', '.yxpignore']);
+export const SKIPPED_DYNAMIC_FILES = new Set(['README.md', 'readme.md', IGNORED_FILE_NAME]);
 
 /**
  * 更新类型优先级，避免在删除文件前中断流程。
