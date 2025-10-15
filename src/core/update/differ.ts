@@ -22,7 +22,8 @@ export async function collectPendingUpdates(
   const projectFiles = await scanProjectFiles(currentDir, allTemplateFiles, shouldIgnore);
   const updates: PendingUpdate[] = [];
 
-  for (const file of allTemplateFiles) {
+  for (let index = 0; index < allTemplateFiles.length; index += 1) {
+    const file = allTemplateFiles[index];
     const templateUpdates = await buildUpdatesForTemplateFile(
       file,
       templatesDir,
@@ -76,7 +77,8 @@ async function buildUpdatesForTemplateFile(
   };
 
   const handlers = getTemplateUpdateHandlers();
-  for (const handler of handlers) {
+  for (let index = 0; index < handlers.length; index += 1) {
+    const handler = handlers[index];
     if (await handler.matches(context)) {
       return handler.handle(context);
     }

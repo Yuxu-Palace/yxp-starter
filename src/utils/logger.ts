@@ -45,6 +45,11 @@ export const logger = {
     }
     console.error(chalk.red(message));
   },
+
+  /** 按需定制颜色或样式输出。 */
+  custom(message: string, colorize: (text: string) => string): void {
+    console.log(colorize(message));
+  },
 };
 
 /**

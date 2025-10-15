@@ -1,39 +1,42 @@
 import chalk from 'chalk';
 import { type Change, diffLines } from 'diff';
+import { logger } from './logger.js';
 
 /**
  * 以彩色文本形式打印两份内容的行级差异。
  */
 export function showDiff(oldContent: string, newContent: string, fileName: string): void {
-  console.log(chalk.cyan(`\n📝 Changes in ${fileName}:`));
-  console.log(chalk.gray('─'.repeat(60)));
+  logger.detail(`\n📝 Changes in ${fileName}:`);
+  logger.note('─'.repeat(60));
 
   const diff: Change[] = diffLines(oldContent, newContent);
   let addedLines = 0;
   let removedLines = 0;
 
-  diff.forEach((part) => {
+  for (let index = 0; index < diff.length; index += 1) {
+    const part = diff[index];
     // diffLines 会把连续内容放在同一个片段，需要逐行拆分。
-    const lines = part.value.split('\n').filter((line, index, arr) => {
+    const lines = part.value.split('\n').filter((line, lineIndex, arr) => {
       // 移除 diff 在文件末尾换行时生成的空行。
-      return index < arr.length - 1 || line !== '';
+      return lineIndex < arr.length - 1 || line !== '';
     });
 
-    lines.forEach((line) => {
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+      const line = lines[lineIndex];
       if (part.added) {
-        console.log(chalk.green(`+ ${line}`));
+        logger.plain(chalk.green(`+ ${line}`));
         addedLines++;
       } else if (part.removed) {
-        console.log(chalk.red(`- ${line}`));
+        logger.plain(chalk.red(`- ${line}`));
         removedLines++;
       } else {
-        console.log(chalk.gray(`  ${line}`));
+        logger.plain(chalk.gray(`  ${line}`));
       }
-    });
-  });
+    }
+  }
 
-  console.log(chalk.gray('─'.repeat(60)));
-  console.log(chalk.cyan(`Summary: ${chalk.green(`+${addedLines}`)} ${chalk.red(`-${removedLines}`)} lines`));
+  logger.note('─'.repeat(60));
+  logger.plain(chalk.cyan(`Summary: ${chalk.green(`+${addedLines}`)} ${chalk.red(`-${removedLines}`)} lines`));
 }
 
 /**
@@ -44,8 +47,9 @@ export function getDiffStats(oldContent: string, newContent: string): { added: n
   let added = 0;
   let removed = 0;
 
-  diff.forEach((part) => {
-    const lines = part.value.split('\n').filter((line, index, arr) => index < arr.length - 1 || line !== '');
+  for (let index = 0; index < diff.length; index += 1) {
+    const part = diff[index];
+    const lines = part.value.split('\n').filter((line, lineIndex, arr) => lineIndex < arr.length - 1 || line !== '');
     // 每个片段的有效行数作为增删统计依据。
     const lineCount = lines.length;
     if (part.added) {
@@ -53,7 +57,7 @@ export function getDiffStats(oldContent: string, newContent: string): { added: n
     } else if (part.removed) {
       removed += lineCount;
     }
-  });
+  }
 
   return { added, removed };
 }

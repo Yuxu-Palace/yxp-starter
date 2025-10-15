@@ -9,14 +9,8 @@ lerna-debug.log*
 
 node_modules
 dist
-dist-cli
-dist-ssr
 *.local
 
-# Compiled CLI files (keep bin/cli.js)
-bin/**/*.js
-bin/**/*.d.ts
-!bin/cli.js
 
 # Editor directories and files
 .vscode/*

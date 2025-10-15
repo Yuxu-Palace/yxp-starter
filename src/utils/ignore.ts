@@ -38,11 +38,7 @@ export async function createIgnoreMatcher(
       }
 
       const normalized = toPosixPath(relativePath);
-      if (isDirectory) {
-        return ignoreEngine.ignores(`${normalized}/`) || ignoreEngine.ignores(normalized);
-      }
-
-      return ignoreEngine.ignores(normalized);
+      return ignoreEngine.ignores(normalized) || (isDirectory && ignoreEngine.ignores(`${normalized}/`));
     },
     hasPatterns,
   };

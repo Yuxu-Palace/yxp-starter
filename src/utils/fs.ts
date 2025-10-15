@@ -57,7 +57,8 @@ export async function copyDirectory(src: string, dest: string): Promise<void> {
   await fs.mkdir(dest, { recursive: true });
   const entries = await fs.readdir(src, { withFileTypes: true });
 
-  for (const entry of entries) {
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
 

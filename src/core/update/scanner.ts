@@ -28,7 +28,8 @@ async function scanDirectory(
 ): Promise<void> {
   const directoryEntries = await fs.readdir(dirPath, { withFileTypes: true });
 
-  for (const entry of directoryEntries) {
+  for (let index = 0; index < directoryEntries.length; index += 1) {
+    const entry = directoryEntries[index];
     if (shouldSkipTemplateEntry(entry.name)) {
       continue;
     }
@@ -73,7 +74,8 @@ function processScannedFile(files: FileUpdate[], relativePath: string): void {
 export function getTopLevelEntries(files: FileUpdate[]): Set<string> {
   const entries = new Set<string>();
 
-  for (const file of files) {
+  for (let index = 0; index < files.length; index += 1) {
+    const file = files[index];
     const [topLevel] = file.path.split(path.sep);
     entries.add(topLevel ?? file.path);
   }
@@ -128,7 +130,8 @@ async function scanProjectDirectory(
 ): Promise<void> {
   const directoryEntries = await fs.readdir(dirPath, { withFileTypes: true });
 
-  for (const entry of directoryEntries) {
+  for (let index = 0; index < directoryEntries.length; index += 1) {
+    const entry = directoryEntries[index];
     if (shouldSkipProjectEntry(entry.name)) {
       continue;
     }

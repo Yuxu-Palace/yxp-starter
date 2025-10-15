@@ -14,6 +14,9 @@ export const IGNORED_FILE_NAME = '.yxpignore';
 /** 模板目录中无需同步的路径。 */
 export const IGNORED_TEMPLATE_ENTRIES = new Set(['node_modules', '.pnpm', '.git', 'dist']);
 
+/** 复制模板时跳过这些目录 */
+export const TEMPLATE_IGNORE_ENTRIES = new Set(['node_modules', '.pnpm', 'dist']);
+
 /** 项目中无需扫描的目录。 */
 export const IGNORED_PROJECT_ENTRIES = new Set(['node_modules', '.git', 'dist', 'build', '.turbo', 'coverage']);
 

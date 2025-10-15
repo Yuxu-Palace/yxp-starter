@@ -4,6 +4,7 @@
 
 import chalk from 'chalk';
 import type { PendingUpdate } from '../core/update/types.js';
+import { logger } from './logger.js';
 
 /**
  * 按更新类型分组展示待处理文件。
@@ -11,36 +12,39 @@ import type { PendingUpdate } from '../core/update/types.js';
 export function showUpdateSummary(updates: PendingUpdate[]): void {
   const grouped = groupUpdatesByKind(updates);
 
-  console.log(chalk.bold('\n📋 Files to update:\n'));
+  logger.plain(chalk.bold('\n📋 Files to update:\n'));
 
   // 修改的文件
   if (grouped.modify.length > 0) {
-    console.log(chalk.cyan.bold(`  Modified (${grouped.modify.length}):`));
-    for (const update of grouped.modify) {
+    logger.plain(chalk.cyan.bold(`  Modified (${grouped.modify.length}):`));
+    for (let index = 0; index < grouped.modify.length; index += 1) {
+      const update = grouped.modify[index];
       const stats = formatStats(update);
-      console.log(chalk.cyan(`    • ${update.file.path}${stats}`));
+      logger.plain(chalk.cyan(`    • ${update.file.path}${stats}`));
     }
-    console.log();
+    logger.plain();
   }
 
   // 新增的文件
   if (grouped.add.length > 0) {
-    console.log(chalk.green.bold(`  Added (${grouped.add.length}):`));
-    for (const update of grouped.add) {
+    logger.plain(chalk.green.bold(`  Added (${grouped.add.length}):`));
+    for (let index = 0; index < grouped.add.length; index += 1) {
+      const update = grouped.add[index];
       const stats = formatStats(update);
-      console.log(chalk.green(`    • ${update.file.path}${stats}`));
+      logger.plain(chalk.green(`    • ${update.file.path}${stats}`));
     }
-    console.log();
+    logger.plain();
   }
 
   // 删除的文件
   if (grouped.delete.length > 0) {
-    console.log(chalk.red.bold(`  Deleted (${grouped.delete.length}):`));
-    for (const update of grouped.delete) {
+    logger.plain(chalk.red.bold(`  Deleted (${grouped.delete.length}):`));
+    for (let index = 0; index < grouped.delete.length; index += 1) {
+      const update = grouped.delete[index];
       const stats = formatStats(update);
-      console.log(chalk.red(`    • ${update.file.path}${stats}`));
+      logger.plain(chalk.red(`    • ${update.file.path}${stats}`));
     }
-    console.log();
+    logger.plain();
   }
 }
 
@@ -54,7 +58,8 @@ function groupUpdatesByKind(updates: PendingUpdate[]): Record<string, PendingUpd
     delete: [],
   };
 
-  for (const update of updates) {
+  for (let index = 0; index < updates.length; index += 1) {
+    const update = updates[index];
     grouped[update.kind].push(update);
   }
 

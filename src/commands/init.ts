@@ -2,15 +2,13 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import chalk from 'chalk';
+import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants.js';
 import { copyDirectory, fileExists, readJsonFile, writeJsonFile } from '../utils/fs.js';
+import { logger } from '../utils/logger.js';
 import { chooseTemplate, listTemplateOptions, type TemplateOption, writeStoredTemplate } from '../utils/templates.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// 复制模板时跳过这些目录
-const TEMPLATE_IGNORE_ENTRIES = new Set(['node_modules', '.pnpm', 'dist']);
 
 /**
  * 将模板文件复制到目标目录。
@@ -18,7 +16,8 @@ const TEMPLATE_IGNORE_ENTRIES = new Set(['node_modules', '.pnpm', 'dist']);
 async function copyTemplateContents(templatesDir: string, targetDir: string): Promise<void> {
   const entries = await fs.readdir(templatesDir, { withFileTypes: true });
 
-  for (const entry of entries) {
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
     if (TEMPLATE_IGNORE_ENTRIES.has(entry.name)) {
       continue;
     }
@@ -28,10 +27,10 @@ async function copyTemplateContents(templatesDir: string, targetDir: string): Pr
 
     if (entry.isDirectory()) {
       await copyDirectory(sourcePath, destinationPath);
-      console.log(chalk.green(`✓ Copied ${entry.name}/`));
+      logger.success(`✓ Copied ${entry.name}/`);
     } else {
       await fs.copyFile(sourcePath, destinationPath);
-      console.log(chalk.green(`✓ Copied ${entry.name}`));
+      logger.success(`✓ Copied ${entry.name}`);
     }
   }
 }
@@ -44,42 +43,42 @@ interface InitCommandOptions {
  * 初始化新项目。
  */
 export async function init(projectName: string, options: InitCommandOptions = {}): Promise<void> {
-  console.log(chalk.blue(`\n🚀 Initializing YXP project: ${projectName}\n`));
+  logger.info('\n🚀 Welcome to use yxp cli to initialize the project.\n');
 
   const targetDir = path.resolve(process.cwd(), projectName);
   const templatesRoot = path.resolve(__dirname, '../../templates');
 
   if (await fileExists(targetDir)) {
-    console.log(chalk.red(`❌ Directory ${projectName} already exists!`));
+    logger.error(`❌ Directory ${projectName} already exists!`);
     process.exit(1);
   }
 
   try {
     const template = await resolveTemplateSelection(templatesRoot, options.template);
-    console.log(chalk.blue(`\n🧩 Using template: ${template.name}\n`));
+    logger.info(`\n🧩 Using template: ${template.name}\n`);
 
     await fs.mkdir(targetDir, { recursive: true });
-    console.log(chalk.green(`✓ Created directory: ${projectName}`));
+    logger.success(`✓ Created directory: ${projectName}`);
 
-    console.log(chalk.blue('\n📦 Copying template files...'));
+    logger.info('\n📦 Copying template files...');
     await copyTemplateContents(template.path, targetDir);
 
-    console.log(chalk.blue('\n🪄 Customizing template placeholders...'));
+    logger.info('\n🪄 Customizing template placeholders...');
     await applyTemplatePlaceholders(targetDir, projectName);
 
-    console.log(chalk.blue('\n📝 Customizing package.json...'));
+    logger.info('\n📝 Customizing package.json...');
     await customizePackageJson(targetDir, projectName);
-    console.log(chalk.green('✓ Customized package.json'));
+    logger.success('✓ Customized package.json');
 
     await writeStoredTemplate(targetDir, template.name);
 
-    console.log(chalk.green(`\n✅ Project ${projectName} created successfully!\n`));
-    console.log(chalk.cyan('Next steps:'));
-    console.log(chalk.gray(`  cd ${projectName}`));
-    console.log(chalk.gray('  pnpm install'));
-    console.log(chalk.gray('  pnpm dev\n'));
+    logger.success(`\n✅ Project ${projectName} created successfully!\n`);
+    logger.detail('Next steps:');
+    logger.note(`  cd ${projectName}`);
+    logger.note('  pnpm install');
+    logger.note('  pnpm dev\n');
   } catch (error) {
-    console.error(chalk.red('\n❌ Failed to create project:'), error);
+    logger.error('\n❌ Failed to create project:', error);
     process.exit(1);
   }
 }
@@ -90,8 +89,8 @@ async function resolveTemplateSelection(templatesRoot: string, specifiedTemplate
     const matched = options.find((option) => option.name === specifiedTemplate);
     if (!matched) {
       const available = options.map((option) => option.name).join(', ') || 'none';
-      console.log(chalk.red(`❌ Template "${specifiedTemplate}" not found.`));
-      console.log(chalk.gray(`Available templates: ${available}`));
+      logger.error(`❌ Template "${specifiedTemplate}" not found.`);
+      logger.note(`Available templates: ${available}`);
       process.exit(1);
     }
     return matched;
@@ -113,7 +112,8 @@ type TemplatePackageJson = {
 async function applyTemplatePlaceholders(targetDir: string, projectName: string): Promise<void> {
   const filesToCustomize = ['README.md'];
 
-  for (const relativePath of filesToCustomize) {
+  for (let index = 0; index < filesToCustomize.length; index += 1) {
+    const relativePath = filesToCustomize[index];
     const absolutePath = path.join(targetDir, relativePath);
     if (!(await fileExists(absolutePath))) {
       continue;
@@ -124,7 +124,7 @@ async function applyTemplatePlaceholders(targetDir: string, projectName: string)
 
     if (content !== replaced) {
       await fs.writeFile(absolutePath, replaced);
-      console.log(chalk.green(`✓ Customized ${relativePath}`));
+      logger.success(`✓ Customized ${relativePath}`);
     }
   }
 }
@@ -135,7 +135,7 @@ async function applyTemplatePlaceholders(targetDir: string, projectName: string)
 async function customizePackageJson(targetDir: string, projectName: string): Promise<void> {
   const packagePath = path.join(targetDir, 'package.json');
   if (!(await fileExists(packagePath))) {
-    console.log(chalk.yellow('⚠️  package.json not found in template, skipping customization.'));
+    logger.warn('⚠️  package.json not found in template, skipping customization.');
     return;
   }
 
@@ -143,12 +143,6 @@ async function customizePackageJson(targetDir: string, projectName: string): Pro
   packageJson.name = projectName;
   if (!packageJson.devDependencies) {
     packageJson.devDependencies = {};
-  }
-
-  if (packageJson.devDependencies['yxp-starter']) {
-    // 模板依赖仅在模板项目需要，初始化后移除
-    const { 'yxp-starter': _removed, ...rest } = packageJson.devDependencies;
-    packageJson.devDependencies = rest;
   }
 
   await writeJsonFile(packagePath, packageJson);
