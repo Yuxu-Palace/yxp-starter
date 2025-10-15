@@ -2,18 +2,14 @@
  * 提供交互式更新流程以及用户提示逻辑。
  */
 
+import process from 'node:process';
 import chalk from 'chalk';
 import prompts from 'prompts';
 import { showDiff } from '../../utils/diff.js';
 import { formatStats, logger } from '../../utils/logger.js';
 import { createProgressTracker } from '../../utils/progress.js';
 import { applyBatchUpdate, applyUpdate } from './applier.js';
-import type { PendingUpdate, PromptConfig, UpdateActionHandler } from './types.js';
-
-/**
- * prompts 返回的用户动作类型。
- */
-type UpdateAction = 'update' | 'skip' | 'update-all' | 'skip-all';
+import type { PendingUpdate, PromptConfig, UpdateAction, UpdateActionHandler } from './types.js';
 
 /**
  * 依据更新类型生成提示内容。
@@ -133,6 +129,11 @@ async function promptUpdateAction(
     choices,
     initial: 0,
   });
+
+  if (!action) {
+    logger.error('❌ No action selected. Exiting.');
+    process.exit(0);
+  }
 
   return action;
 }
