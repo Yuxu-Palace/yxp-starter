@@ -10,10 +10,10 @@ import { IGNORED_FILE_NAME } from '../core/update/constants.js';
 import { collectPendingUpdates } from '../core/update/differ.js';
 import { runInteractiveUpdate } from '../core/update/interactive.js';
 import type { UpdateOptions } from '../core/update/types.js';
-import { fileExists } from '../utils/fs.js';
 import { createIgnoreMatcher } from '../utils/ignore.js';
 import { logger } from '../utils/logger.js';
 import { showUpdateSummary } from '../utils/summary.js';
+import { chooseTemplate, readStoredTemplate, writeStoredTemplate } from '../utils/templates.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,17 +21,6 @@ const __dirname = path.dirname(__filename);
 /**
  * 验证当前目录是否满足更新前置条件。
  */
-async function validateProjectContext(currentDir: string): Promise<boolean> {
-  const packageJsonPath = path.join(currentDir, 'package.json');
-
-  if (!(await fileExists(packageJsonPath))) {
-    logger.error('❌ No package.json found. Are you in a project directory?');
-    process.exit(1);
-  }
-
-  return true;
-}
-
 /**
  * 执行更新命令。
  *
@@ -43,13 +32,16 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
   logger.info('\n🔄 Updating project from yxp-starter...\n');
 
   const currentDir = process.cwd();
-  const templatesDir = path.resolve(__dirname, '../../templates');
+  const templatesRoot = path.resolve(__dirname, '../../templates');
 
   try {
-    const shouldContinue = await validateProjectContext(currentDir);
-    if (!shouldContinue) {
-      return;
+    const storedTemplate = await readStoredTemplate(currentDir);
+    const template = await chooseTemplate(templatesRoot, 'Select a template to sync from', storedTemplate ?? undefined);
+    if (storedTemplate !== template.name) {
+      await writeStoredTemplate(currentDir, template.name);
     }
+    const templatesDir = template.path;
+    logger.detail(`Using template: ${template.name}`);
 
     const { ignores: shouldIgnore, hasPatterns } = await createIgnoreMatcher(currentDir);
     if (hasPatterns) {

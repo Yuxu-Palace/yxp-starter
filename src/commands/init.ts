@@ -4,6 +4,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import chalk from 'chalk';
 import { copyDirectory, fileExists, readJsonFile, writeJsonFile } from '../utils/fs.js';
+import { chooseTemplate, listTemplateOptions, type TemplateOption, writeStoredTemplate } from '../utils/templates.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,14 +36,18 @@ async function copyTemplateContents(templatesDir: string, targetDir: string): Pr
   }
 }
 
+interface InitCommandOptions {
+  template?: string;
+}
+
 /**
  * 初始化新项目。
  */
-export async function init(projectName: string): Promise<void> {
+export async function init(projectName: string, options: InitCommandOptions = {}): Promise<void> {
   console.log(chalk.blue(`\n🚀 Initializing YXP project: ${projectName}\n`));
 
   const targetDir = path.resolve(process.cwd(), projectName);
-  const templatesDir = path.resolve(__dirname, '../../templates');
+  const templatesRoot = path.resolve(__dirname, '../../templates');
 
   if (await fileExists(targetDir)) {
     console.log(chalk.red(`❌ Directory ${projectName} already exists!`));
@@ -50,11 +55,14 @@ export async function init(projectName: string): Promise<void> {
   }
 
   try {
+    const template = await resolveTemplateSelection(templatesRoot, options.template);
+    console.log(chalk.blue(`\n🧩 Using template: ${template.name}\n`));
+
     await fs.mkdir(targetDir, { recursive: true });
     console.log(chalk.green(`✓ Created directory: ${projectName}`));
 
     console.log(chalk.blue('\n📦 Copying template files...'));
-    await copyTemplateContents(templatesDir, targetDir);
+    await copyTemplateContents(template.path, targetDir);
 
     console.log(chalk.blue('\n🪄 Customizing template placeholders...'));
     await applyTemplatePlaceholders(targetDir, projectName);
@@ -62,6 +70,8 @@ export async function init(projectName: string): Promise<void> {
     console.log(chalk.blue('\n📝 Customizing package.json...'));
     await customizePackageJson(targetDir, projectName);
     console.log(chalk.green('✓ Customized package.json'));
+
+    await writeStoredTemplate(targetDir, template.name);
 
     console.log(chalk.green(`\n✅ Project ${projectName} created successfully!\n`));
     console.log(chalk.cyan('Next steps:'));
@@ -72,6 +82,22 @@ export async function init(projectName: string): Promise<void> {
     console.error(chalk.red('\n❌ Failed to create project:'), error);
     process.exit(1);
   }
+}
+
+async function resolveTemplateSelection(templatesRoot: string, specifiedTemplate?: string): Promise<TemplateOption> {
+  if (specifiedTemplate) {
+    const options = await listTemplateOptions(templatesRoot);
+    const matched = options.find((option) => option.name === specifiedTemplate);
+    if (!matched) {
+      const available = options.map((option) => option.name).join(', ') || 'none';
+      console.log(chalk.red(`❌ Template "${specifiedTemplate}" not found.`));
+      console.log(chalk.gray(`Available templates: ${available}`));
+      process.exit(1);
+    }
+    return matched;
+  }
+
+  return chooseTemplate(templatesRoot, 'Select a project template');
 }
 
 // 仅挑选初始化阶段会用到的 package.json 字段。

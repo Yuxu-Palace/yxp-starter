@@ -21,6 +21,7 @@ program
   .command('init')
   .description('Initialize a new YXP project')
   .argument('[project-name]', 'Project name', 'my-project')
+  .option('-t, --template <templateName>', 'Template name to use directly')
   .action(init);
 
 program
