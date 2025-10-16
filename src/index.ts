@@ -2,8 +2,8 @@
 
 import { createRequire } from 'node:module';
 import { Command } from 'commander';
-import { init } from './commands/init.js';
-import { update } from './commands/update.js';
+import { init } from './commands/init.ts';
+import { update } from './commands/update.ts';
 
 const require = createRequire(import.meta.url);
 const pkgInfo = require('../package.json') as {

@@ -1,7 +1,8 @@
+import type { Dirent } from 'node:fs';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import prompts from 'prompts';
-import { fileExists } from './fs.js';
+import { fileExists } from './fs.ts';
 
 /** 模板记录文件名。 */
 const TEMPLATE_MANIFEST = '.yxp-template';
@@ -16,7 +17,14 @@ export interface TemplateOption {
  * 列出模板根目录下的所有模板目录。
  */
 export async function listTemplateOptions(templatesRoot: string): Promise<TemplateOption[]> {
-  const entries = await fs.readdir(templatesRoot, { withFileTypes: true });
+  let entries: Dirent[];
+
+  try {
+    entries = await fs.readdir(templatesRoot, { withFileTypes: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to access template directory at ${templatesRoot}: ${message}`);
+  }
 
   const options: TemplateOption[] = [];
 
@@ -41,7 +49,17 @@ export async function chooseTemplate(
   message: string,
   defaultTemplate?: string,
 ): Promise<TemplateOption> {
-  const options = await listTemplateOptions(templatesRoot);
+  let options: TemplateOption[];
+
+  try {
+    options = await listTemplateOptions(templatesRoot);
+  } catch (error) {
+    throw new Error(
+      `No templates available. Failed to resolve template directory at ${templatesRoot}. ` +
+        'Please ensure the CLI package includes the templates folder.' +
+        ` Original error: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 
   if (options.length === 0) {
     throw new Error('No templates found. Please add a template before continuing.');

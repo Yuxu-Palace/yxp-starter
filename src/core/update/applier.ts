@@ -4,10 +4,10 @@
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { logger } from '../../utils/logger.js';
-import { getTargetPackageName, sanitizePackageJsonContent } from '../../utils/package-json.js';
-import { createProgressTracker } from '../../utils/progress.js';
-import type { PendingUpdate } from './types.js';
+import { logger } from '../../utils/logger.ts';
+import { getTargetPackageName, sanitizePackageJsonContent } from '../../utils/package-json.ts';
+import { createProgressTracker } from '../../utils/progress.ts';
+import type { PendingUpdate } from './types.ts';
 
 /**
  * 处理单个待更新文件并落盘。

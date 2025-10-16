@@ -1,16 +1,13 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
-import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants.js';
-import { copyDirectory, fileExists } from '../utils/fs.js';
-import { readJsonFile, writeJsonFile } from '../utils/json.js';
-import { logger } from '../utils/logger.js';
-import { applyPackageNameField } from '../utils/package-json.js';
-import { chooseTemplate, listTemplateOptions, type TemplateOption, writeStoredTemplate } from '../utils/templates.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants.ts';
+import { copyDirectory, fileExists } from '../utils/fs.ts';
+import { readJsonFile, writeJsonFile } from '../utils/json.ts';
+import { logger } from '../utils/logger.ts';
+import { applyPackageNameField } from '../utils/package-json.ts';
+import { getTemplatesRoot } from '../utils/path.ts';
+import { chooseTemplate, listTemplateOptions, type TemplateOption, writeStoredTemplate } from '../utils/templates.ts';
 
 /**
  * 将模板文件复制到目标目录。
@@ -48,7 +45,7 @@ export async function init(projectName: string, options: InitCommandOptions = {}
   logger.info('\n🚀 Welcome to use yxp cli to initialize the project.\n');
 
   const targetDir = path.resolve(process.cwd(), projectName);
-  const templatesRoot = path.resolve(__dirname, '../../templates');
+  const templatesRoot = getTemplatesRoot();
 
   if (await fileExists(targetDir)) {
     logger.error(`❌ Directory ${projectName} already exists!`);

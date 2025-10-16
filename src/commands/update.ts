@@ -2,21 +2,17 @@
  * 从模板目录同步文件到当前项目。
  */
 
-import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
-import { applyBatchUpdate } from '../core/update/applier.js';
-import { IGNORED_FILE_NAME } from '../core/update/constants.js';
-import { collectPendingUpdates } from '../core/update/differ.js';
-import { runInteractiveUpdate } from '../core/update/interactive.js';
-import type { UpdateOptions } from '../core/update/types.js';
-import { createIgnoreMatcher } from '../utils/ignore.js';
-import { logger } from '../utils/logger.js';
-import { showUpdateSummary } from '../utils/summary.js';
-import { chooseTemplate, readStoredTemplate, writeStoredTemplate } from '../utils/templates.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { applyBatchUpdate } from '../core/update/applier.ts';
+import { IGNORED_FILE_NAME } from '../core/update/constants.ts';
+import { collectPendingUpdates } from '../core/update/differ.ts';
+import { runInteractiveUpdate } from '../core/update/interactive.ts';
+import type { UpdateOptions } from '../core/update/types.ts';
+import { createIgnoreMatcher } from '../utils/ignore.ts';
+import { logger } from '../utils/logger.ts';
+import { getTemplatesRoot } from '../utils/path.ts';
+import { showUpdateSummary } from '../utils/summary.ts';
+import { chooseTemplate, readStoredTemplate, writeStoredTemplate } from '../utils/templates.ts';
 
 /**
  * 验证当前目录是否满足更新前置条件。
@@ -32,7 +28,7 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
   logger.info('\n🔄 Updating project from yxp-starter...\n');
 
   const currentDir = process.cwd();
-  const templatesRoot = path.resolve(__dirname, '../../templates');
+  const templatesRoot = getTemplatesRoot();
 
   try {
     const storedTemplate = await readStoredTemplate(currentDir);

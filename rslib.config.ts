@@ -5,12 +5,12 @@ export default defineConfig({
     {
       format: 'esm',
       syntax: 'es2022',
-      bundle: false,
+      bundle: true,
     },
   ],
   source: {
     entry: {
-      index: ['./src/**'],
+      index: './src/index.ts',
     },
   },
   output: {

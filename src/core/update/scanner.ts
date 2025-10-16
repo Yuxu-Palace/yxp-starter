@@ -4,9 +4,9 @@
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { fileExists } from '../../utils/fs.js';
-import { IGNORED_PROJECT_ENTRIES, IGNORED_TEMPLATE_ENTRIES } from './constants.js';
-import type { FileUpdate, IgnoreMatcher } from './types.js';
+import { fileExists } from '../../utils/fs.ts';
+import { IGNORED_PROJECT_ENTRIES, IGNORED_TEMPLATE_ENTRIES } from './constants.ts';
+import type { FileUpdate, IgnoreMatcher } from './types.ts';
 
 /**
  * 扫描模板目录并收集需要同步的文件。

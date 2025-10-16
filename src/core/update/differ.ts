@@ -3,12 +3,12 @@
  */
 
 import path from 'node:path';
-import { getDiffStats } from '../../utils/diff.js';
-import { fileExists, readFileContent } from '../../utils/fs.js';
-import { UPDATE_KIND_PRIORITY } from './constants.js';
-import { getTemplateUpdateHandlers } from './handlers.js';
-import { scanProjectFiles, scanTemplateFiles } from './scanner.js';
-import type { DiffSummary, FileUpdate, IgnoreMatcher, PendingUpdate, TemplateUpdateContext } from './types.js';
+import { getDiffStats } from '../../utils/diff.ts';
+import { fileExists, readFileContent } from '../../utils/fs.ts';
+import { UPDATE_KIND_PRIORITY } from './constants.ts';
+import { getTemplateUpdateHandlers } from './handlers.ts';
+import { scanProjectFiles, scanTemplateFiles } from './scanner.ts';
+import type { DiffSummary, FileUpdate, IgnoreMatcher, PendingUpdate, TemplateUpdateContext } from './types.ts';
 
 /**
  * 扫描模板与项目的差异并返回待处理更新。

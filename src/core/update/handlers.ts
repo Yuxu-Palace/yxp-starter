@@ -3,12 +3,12 @@
  */
 
 import { promises as fs } from 'node:fs';
-import { getDiffStats } from '../../utils/diff.js';
-import { fileExists, readFileContent } from '../../utils/fs.js';
-import { logDiffResult } from '../../utils/logger.js';
-import { getPackageName, sanitizePackageJsonContent } from '../../utils/package-json.js';
-import { SKIPPED_DYNAMIC_FILES } from './constants.js';
-import type { DiffSummary, FileUpdate, PendingUpdate, TemplateUpdateHandler } from './types.js';
+import { getDiffStats } from '../../utils/diff.ts';
+import { fileExists, readFileContent } from '../../utils/fs.ts';
+import { logDiffResult } from '../../utils/logger.ts';
+import { getPackageName, sanitizePackageJsonContent } from '../../utils/package-json.ts';
+import { SKIPPED_DYNAMIC_FILES } from './constants.ts';
+import type { DiffSummary, FileUpdate, PendingUpdate, TemplateUpdateHandler } from './types.ts';
 
 /**
  * 生成模板中新文件的新增操作。

@@ -3,8 +3,8 @@
  */
 
 import { promises as fs } from 'node:fs';
-import { fileExists } from './fs.js';
-import { formatJson } from './json.js';
+import { fileExists } from './fs.ts';
+import { formatJson } from './json.ts';
 
 /**
  * 判断值是否为非空字符串。

@@ -82,4 +82,4 @@ export async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-export { readJsonFile, writeJsonFile } from './json.js';
+export { readJsonFile, writeJsonFile } from './json.ts';

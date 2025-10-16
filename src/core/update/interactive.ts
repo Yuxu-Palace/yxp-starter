@@ -5,11 +5,11 @@
 import process from 'node:process';
 import chalk from 'chalk';
 import prompts from 'prompts';
-import { showDiff } from '../../utils/diff.js';
-import { formatStats, logger } from '../../utils/logger.js';
-import { createProgressTracker } from '../../utils/progress.js';
-import { applyBatchUpdate, applyUpdate } from './applier.js';
-import type { PendingUpdate, PromptConfig, UpdateAction, UpdateActionHandler } from './types.js';
+import { showDiff } from '../../utils/diff.ts';
+import { formatStats, logger } from '../../utils/logger.ts';
+import { createProgressTracker } from '../../utils/progress.ts';
+import { applyBatchUpdate, applyUpdate } from './applier.ts';
+import type { PendingUpdate, PromptConfig, UpdateAction, UpdateActionHandler } from './types.ts';
 
 /**
  * 依据更新类型生成提示内容。
