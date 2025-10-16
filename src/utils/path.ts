@@ -3,12 +3,13 @@
  */
 
 import { existsSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const PACKAGE_ROOT = resolvePackageRoot();
-const TEMPLATES_ROOT = path.join(PACKAGE_ROOT, 'templates');
+const TEMPLATE_CACHE_ROOT = path.join(os.homedir(), '.yxp-starter', 'templates');
 
 /**
  * 将平台路径转换为 POSIX 风格，方便 ignore 匹配。
@@ -22,9 +23,9 @@ export function getPackageRoot(): string {
   return PACKAGE_ROOT;
 }
 
-/** 获取模板目录的绝对路径。 */
-export function getTemplatesRoot(): string {
-  return TEMPLATES_ROOT;
+/** 获取模板缓存目录。 */
+export function getTemplateCacheRoot(): string {
+  return TEMPLATE_CACHE_ROOT;
 }
 
 function resolvePackageRoot(): string {

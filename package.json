@@ -16,7 +16,8 @@
   },
   "files": [
     "bin",
-    "templates"
+    "templates",
+    "template.json"
   ],
   "keywords": [],
   "author": "yuxu-palace",

@@ -19,23 +19,26 @@ yxp-starter 是 yuxu-palace 官方提供的脚手架与更新 CLI，内置多种
 - [许可证](#许可证)
 
 ## 功能亮点
-- 交互式 `init` 命令允许在 `templates/yxp-lib-start`、`templates/yxp-app-start` 等模板间切换，只复制必要文件并自动跳过 `node_modules`、`.pnpm`、`dist` 等目录。
-- 智能占位符与元数据处理会更新 README 中的 `{{projectName}}`，保留 `package.json` 的 `name` 字段，并在项目根记录 `.yxp-template`。
+- `template.json` 维护可用模板清单，每个模板指向远程 Git 仓库（可选子目录）；CLI 会按需拉取并缓存到本地 `~/.yxp-starter/templates`。
+- 交互式 `init` 命令仅复制核心文件，自动跳过 `node_modules`、`.pnpm`、`dist`、`.git` 等目录。
+- 智能占位符与元数据处理会更新 README 中的 `{{projectName}}`，保留 `package.json` 的 `name` 字段，并把所用模板及 git commit 记录到 JSON 版 `.yxp-template`。
 - `update` 命令根据模板与项目差异生成彩色 diff（含二进制检测）、支持 `--all` 全量更新与 `--skip-all` 干跑模式。
 - 通过 `.yxpignore` 提供 Gitignore 风格的排除规则，同时内置忽略列表保证本地文件不会被覆盖。
-- 工具函数统一了 JSON 写入、文件读写、日志输出、进度展示和模板记录的行为，确保命令执行一致。
+- 工具函数统一了 JSON 写入、远程模板下载与缓存、文件读写、日志输出、进度展示等行为，确保命令执行一致。
 
 ## 架构说明
+- `template.json` 定义模板列表、仓库地址、分支/commit 以及可选子目录。
 - `src/index.ts` 使用 Commander 注册 CLI 入口，并暴露 `init`、`update` 两个命令。
-- `src/commands/init.ts` 负责项目初始化：模板发现、交互式选择、文件复制、占位符替换以及 `package.json` 增量更新。
-- `src/commands/update.ts` 主导同步流程：读取 `.yxp-template`、解析忽略规则、扫描差异并支持交互式或批量更新模式。
+- `src/commands/init.ts` 负责项目初始化：远程拉取/缓存模板、交互式选择、复制文件、占位符替换以及 `.yxp-template` 记录。
+- `src/commands/update.ts` 主导同步流程：获取模板最新内容、扫描差异、解析忽略规则，并支持交互式或批量更新模式。
 - `src/core/update/` 提供差异引擎：`scanner.ts` 枚举文件、`differ.ts` 生成待处理项目、`handlers.ts` 判定增删改策略、`applier.ts` 写入文件并结合 `progress.ts` 展示进度。
-- `src/utils/` 封装常用能力，包括二进制安全文件读取（`fs.ts`）、差异展示与摘要、JSON 格式化、模板记录、忽略解析以及彩色日志。
+- `src/utils/` 封装常用能力，包括二进制安全文件读取（`fs.ts`）、差异展示与摘要、JSON 格式化、模板配置读取（`template-config.ts`）、远程下载缓存（`template-fetch.ts`）、模板记录（`templates.ts`）、忽略解析以及彩色日志。
 - `src/types/` 提供第三方依赖的类型声明（如 `cli-progress-footer`），提升 TypeScript 开发体验。
 
 ## 安装
 1. 环境要求：
    - Node.js ≥ 18
+   - Git（用于拉取模板）
    - 建议使用 pnpm
 2. 克隆仓库并安装依赖：
 
@@ -59,6 +62,7 @@ pnpm dlx yxp-start init my-project --template yxp-lib-start
 ```
 
 该命令会创建目标目录、复制模板文件、替换 `{{projectName}}` 占位符，并保留 `package.json` 中已有的包名。
+可用模板由 `template.json` 定义，每个模板会在执行时通过 Git 克隆到本地缓存 `~/.yxp-starter/templates`，后续运行会复用缓存。
 
 ### `update`
 
@@ -75,7 +79,7 @@ pnpm dlx yxp-start update --all
 pnpm dlx yxp-start update --skip-all
 ```
 
-更新流程会遵循 `.yxpignore`、自动跳过 `README.md` 等动态文件，并在批量操作时展示实时进度。
+每次执行都会从 Git 源刷新模板（若缓存命中则直接复用），再进行差异比对。更新流程会遵循 `.yxpignore`、自动跳过 `README.md` 等动态文件，并在批量操作时展示实时进度。
 
 ## 示例
 - **构建库脚手架**：使用 `pnpm dlx yxp-start init my-lib --template yxp-lib-start` 快速生成包含 Rslib、Vitest、Biome 的库项目。
@@ -98,7 +102,7 @@ pnpm dlx yxp-start update --skip-all
 
 ## 更新日志
 - 可通过 `git log` 查看关键改动，后续也会在发布时同步模板更新说明。
-- 模板位于 `templates/` 目录，随仓库版本一并演进。
+- 模板源码位于 `template.json` 指向的 Git 仓库，更新模板只需在对应仓库提交并更新引用。
 
 ## 许可证
 MIT
