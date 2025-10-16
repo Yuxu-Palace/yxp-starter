@@ -82,17 +82,4 @@ export async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-/**
- * 读取 JSON 文件并反序列化。
- */
-export async function readJsonFile<T = unknown>(filePath: string): Promise<T> {
-  const content = await fs.readFile(filePath, 'utf-8');
-  return JSON.parse(content) as T;
-}
-
-/**
- * 以统一的缩进与换行格式写入 JSON。
- */
-export async function writeJsonFile(filePath: string, data: unknown): Promise<void> {
-  await fs.writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`);
-}
+export { readJsonFile, writeJsonFile } from './json.js';

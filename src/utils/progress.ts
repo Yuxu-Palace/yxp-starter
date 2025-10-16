@@ -66,13 +66,6 @@ export class ProgressTracker {
   }
 
   /**
-   * 兼容旧接口，无需实际操作。
-   */
-  hide(): void {
-    // cli-progress-footer 会自动处理输出位置。
-  }
-
-  /**
    * 清除进度显示。
    */
   finish(): void {

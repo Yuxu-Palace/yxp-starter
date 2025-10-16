@@ -3,5 +3,5 @@
  */
 export default {
   '*.{ts,tsx,js,jsx}': () => ['pnpm run check'],
-  '*.{json,yml,yaml,md}': ['pnpm run format'],
+  '*.json': ['pnpm run format'],
 };

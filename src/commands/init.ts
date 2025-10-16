@@ -3,8 +3,10 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants.js';
-import { copyDirectory, fileExists, readJsonFile, writeJsonFile } from '../utils/fs.js';
+import { copyDirectory, fileExists } from '../utils/fs.js';
+import { readJsonFile, writeJsonFile } from '../utils/json.js';
 import { logger } from '../utils/logger.js';
+import { applyPackageNameField } from '../utils/package-json.js';
 import { chooseTemplate, listTemplateOptions, type TemplateOption, writeStoredTemplate } from '../utils/templates.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -130,7 +132,7 @@ async function applyTemplatePlaceholders(targetDir: string, projectName: string)
 }
 
 /**
- * 更新 package.json，写入项目名并移除模板依赖。
+ * 更新 package.json，写入项目名。
  */
 async function customizePackageJson(targetDir: string, projectName: string): Promise<void> {
   const packagePath = path.join(targetDir, 'package.json');
@@ -139,8 +141,9 @@ async function customizePackageJson(targetDir: string, projectName: string): Pro
     return;
   }
 
-  const packageJson = await readJsonFile<TemplatePackageJson>(packagePath);
-  packageJson.name = projectName;
+  const packageObj = await readJsonFile<TemplatePackageJson>(packagePath);
+
+  const packageJson = applyPackageNameField(packageObj, projectName);
   if (!packageJson.devDependencies) {
     packageJson.devDependencies = {};
   }

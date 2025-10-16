@@ -17,15 +17,20 @@ export interface TemplateOption {
  */
 export async function listTemplateOptions(templatesRoot: string): Promise<TemplateOption[]> {
   const entries = await fs.readdir(templatesRoot, { withFileTypes: true });
-  return entries
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => {
-      return {
+
+  const options: TemplateOption[] = [];
+
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    if (entry.isDirectory()) {
+      options.push({
         name: entry.name,
         path: path.join(templatesRoot, entry.name),
-      };
-    })
-    .sort((first, second) => first.name.localeCompare(second.name));
+      });
+    }
+  }
+
+  return options;
 }
 
 /**

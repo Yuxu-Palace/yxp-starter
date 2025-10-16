@@ -1,13 +1,13 @@
 {
-  "name": "@yuxu-palace/yxp-starter",
+  "name": "@yuxu-palace/yxp-lib-start",
   "version": "0.0.0",
-  "description": "",
+  "description": "Quickstart template for building yuxu-palace libraries.",
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
     "dev:mf": "rslib mf-dev",
-    "check": "biome check --write",
-    "format": "biome format --write",
+    "check": "biome check --write --no-errors-on-unmatched",
+    "format": "biome format --write --no-errors-on-unmatched",
     "test": "vitest",
     "test:ci": "cross-env CI=true vitest run",
     "prepare": "husky"

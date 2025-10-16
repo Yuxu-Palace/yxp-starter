@@ -3,22 +3,39 @@
  */
 
 import { promises as fs } from 'node:fs';
-import { JSON_INDENT_SPACES, JSON_TRAILING_NEWLINE } from '../core/update/constants.js';
 import { fileExists } from './fs.js';
+import { formatJson } from './json.js';
 
 /**
- * 验证 package name 是否有效，方便类型收窄。
+ * 判断值是否为非空字符串。
  */
-export function isValidPackageName(name: string | undefined): name is string {
-  return typeof name === 'string' && name.length > 0;
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0;
 }
 
 /**
- * 按统一缩进与换行格式化 package.json。
+ * 在解析后的 package.json 对象上按需覆盖指定字段。
  */
-export function formatPackageJson(packageObject: unknown): string {
-  const serialized = JSON.stringify(packageObject, null, JSON_INDENT_SPACES);
-  return serialized + JSON_TRAILING_NEWLINE;
+export function applyPackageField<T extends Record<string, unknown>, K extends PropertyKey>(
+  packageObject: T,
+  key: K,
+  value: unknown,
+): T & Record<K, unknown> {
+  return {
+    ...packageObject,
+    [key]: value,
+  } as T & Record<K, unknown>;
+}
+
+/**
+ * 按需更新 package.json 的 name 字段。
+ */
+export function applyPackageNameField<T extends Record<string, unknown>>(packageObject: T, enforcedName?: string): T {
+  if (!isNonEmptyString(enforcedName)) {
+    return packageObject;
+  }
+
+  return applyPackageField(packageObject, 'name', enforcedName);
 }
 
 /**
@@ -38,11 +55,8 @@ export function getPackageName(content: string): string | undefined {
  */
 export function sanitizePackageJsonContent(content: string, enforcedName?: string): string {
   try {
-    const parsed = JSON.parse(content);
-    if (isValidPackageName(enforcedName)) {
-      parsed.name = enforcedName;
-    }
-    return formatPackageJson(parsed);
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    return formatJson(applyPackageNameField(parsed, enforcedName));
   } catch {
     return content;
   }

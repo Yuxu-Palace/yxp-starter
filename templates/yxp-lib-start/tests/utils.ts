@@ -38,7 +38,7 @@ function getBaseCtx<T extends Partial<Context> & Pick<Context, 'format' | 'IS_CI
  *
  * @param testFunc 测试函数
  */
-export function MFT(testFunc: (module: Module, ctx: Context) => void | Promise<void>) {
+export function MFT(testFunc: (module: Module, ctx: Context) => any) {
   describe.each(Object.values(MODE))('multiple format test', async (format) => {
     // 本地只测试源码
     const sourceOnly = !IS_CI && format === MODE.SOURCE;
