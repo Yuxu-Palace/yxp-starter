@@ -81,5 +81,3 @@ export async function fileExists(filePath: string): Promise<boolean> {
     return false;
   }
 }
-
-export { readJsonFile, writeJsonFile } from './json.ts';

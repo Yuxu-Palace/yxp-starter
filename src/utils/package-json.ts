@@ -3,13 +3,13 @@
  */
 
 import { promises as fs } from 'node:fs';
-import { fileExists } from './fs.ts';
-import { formatJson } from './json.ts';
+import { fileExists } from './fs';
+import { formatJson } from './json';
 
 /**
  * 判断值是否为非空字符串。
  */
-function isNonEmptyString(value: unknown): value is string {
+function isNotEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
@@ -31,7 +31,7 @@ export function applyPackageField<T extends Record<string, unknown>, K extends P
  * 按需更新 package.json 的 name 字段。
  */
 export function applyPackageNameField<T extends Record<string, unknown>>(packageObject: T, enforcedName?: string): T {
-  if (!isNonEmptyString(enforcedName)) {
+  if (!isNotEmptyString(enforcedName)) {
     return packageObject;
   }
 

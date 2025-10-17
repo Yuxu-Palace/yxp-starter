@@ -3,7 +3,7 @@ import { defineConfig } from '@rslib/core';
 export default defineConfig({
   lib: [
     {
-      format: 'esm',
+      format: 'cjs',
       syntax: 'es2022',
       bundle: true,
     },
@@ -18,6 +18,9 @@ export default defineConfig({
       root: 'bin',
       js: './',
       jsAsync: './',
+    },
+    filename: {
+      js: '[name].cjs',
     },
     cleanDistPath: true,
   },

@@ -28,7 +28,7 @@ export function getTemplatesRoot(): string {
 }
 
 function resolvePackageRoot(): string {
-  const candidates = compact([moduleDirname(), cliDirname(), process.cwd()]);
+  const candidates = filterEmptyValue([moduleDirname(), cliDirname(), process.cwd()]);
 
   for (let index = 0; index < candidates.length; index += 1) {
     const startDir = candidates[index];
@@ -54,7 +54,7 @@ function cliDirname(): string | undefined {
   return path.dirname(process.argv[1]);
 }
 
-function compact<T>(values: (T | undefined | null)[]): T[] {
+function filterEmptyValue<T>(values: (T | undefined | null)[]): T[] {
   const filtered: T[] = [];
   for (let index = 0; index < values.length; index += 1) {
     const value = values[index];

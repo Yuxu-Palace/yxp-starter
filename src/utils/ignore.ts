@@ -5,10 +5,10 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import ignore from 'ignore';
-import { IGNORED_FILE_NAME } from '../core/update/constants.ts';
-import type { IgnoreMatcher } from '../core/update/types.ts';
-import { fileExists } from './fs.ts';
-import { toPosixPath } from './path.ts';
+import { IGNORED_FILE_NAME } from '../core/update/constants';
+import type { IgnoreMatcher } from '../core/update/types';
+import { fileExists } from './fs';
+import { toPosixPath } from './path';
 
 /**
  * 构造忽略匹配器，不存在时返回总是允许的匹配器。

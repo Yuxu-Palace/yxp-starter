@@ -3,8 +3,8 @@
  */
 
 import chalk from 'chalk';
-import type { PendingUpdate } from '../core/update/types.ts';
-import { logger } from './logger.ts';
+import type { PendingUpdate } from '../core/update/types';
+import { logger } from './logger';
 
 /**
  * 按更新类型分组展示待处理文件。

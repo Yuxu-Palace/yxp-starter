@@ -2,7 +2,7 @@
  * 更新流程使用到的常量。
  */
 
-import type { UpdateKind } from './types.ts';
+import type { UpdateKind } from './types';
 
 /** `JSON.stringify` 使用的缩进宽度。 */
 export const JSON_INDENT_SPACES = 2;

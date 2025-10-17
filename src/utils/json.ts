@@ -1,5 +1,5 @@
 import { promises as fs } from 'node:fs';
-import { JSON_INDENT_SPACES, JSON_TRAILING_NEWLINE } from '../core/update/constants.ts';
+import { JSON_INDENT_SPACES, JSON_TRAILING_NEWLINE } from '../core/update/constants';
 /**
  * 将任意对象序列化为统一缩进和换行的 JSON 字符串。
  */

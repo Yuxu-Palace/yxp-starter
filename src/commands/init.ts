@@ -1,13 +1,13 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants.ts';
-import { copyDirectory, fileExists } from '../utils/fs.ts';
-import { readJsonFile, writeJsonFile } from '../utils/json.ts';
-import { logger } from '../utils/logger.ts';
-import { applyPackageNameField } from '../utils/package-json.ts';
-import { getTemplatesRoot } from '../utils/path.ts';
-import { chooseTemplate, listTemplateOptions, type TemplateOption, writeStoredTemplate } from '../utils/templates.ts';
+import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants';
+import { copyDirectory, fileExists } from '../utils/fs';
+import { readJsonFile, writeJsonFile } from '../utils/json';
+import { logger } from '../utils/logger';
+import { applyPackageNameField } from '../utils/package-json';
+import { getTemplatesRoot } from '../utils/path';
+import { chooseTemplate, listTemplateOptions, type TemplateOption, writeStoredTemplate } from '../utils/templates';
 
 /**
  * 将模板文件复制到目标目录。
@@ -141,9 +141,6 @@ async function customizePackageJson(targetDir: string, projectName: string): Pro
   const packageObj = await readJsonFile<TemplatePackageJson>(packagePath);
 
   const packageJson = applyPackageNameField(packageObj, projectName);
-  if (!packageJson.devDependencies) {
-    packageJson.devDependencies = {};
-  }
 
   await writeJsonFile(packagePath, packageJson);
 }

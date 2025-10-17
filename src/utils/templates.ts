@@ -2,7 +2,7 @@ import type { Dirent } from 'node:fs';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import prompts from 'prompts';
-import { fileExists } from './fs.ts';
+import { fileExists } from './fs';
 
 /** 模板记录文件名。 */
 const TEMPLATE_MANIFEST = '.yxp-template';

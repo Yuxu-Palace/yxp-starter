@@ -3,20 +3,17 @@
  */
 
 import process from 'node:process';
-import { applyBatchUpdate } from '../core/update/applier.ts';
-import { IGNORED_FILE_NAME } from '../core/update/constants.ts';
-import { collectPendingUpdates } from '../core/update/differ.ts';
-import { runInteractiveUpdate } from '../core/update/interactive.ts';
-import type { UpdateOptions } from '../core/update/types.ts';
-import { createIgnoreMatcher } from '../utils/ignore.ts';
-import { logger } from '../utils/logger.ts';
-import { getTemplatesRoot } from '../utils/path.ts';
-import { showUpdateSummary } from '../utils/summary.ts';
-import { chooseTemplate, readStoredTemplate, writeStoredTemplate } from '../utils/templates.ts';
+import { applyBatchUpdate } from '../core/update/applier';
+import { IGNORED_FILE_NAME } from '../core/update/constants';
+import { collectPendingUpdates } from '../core/update/differ';
+import { runInteractiveUpdate } from '../core/update/interactive';
+import type { UpdateOptions } from '../core/update/types';
+import { createIgnoreMatcher } from '../utils/ignore';
+import { logger } from '../utils/logger';
+import { getTemplatesRoot } from '../utils/path';
+import { showUpdateSummary } from '../utils/summary';
+import { chooseTemplate, readStoredTemplate, writeStoredTemplate } from '../utils/templates';
 
-/**
- * 验证当前目录是否满足更新前置条件。
- */
 /**
  * 执行更新命令。
  *

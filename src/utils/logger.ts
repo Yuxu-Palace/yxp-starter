@@ -3,7 +3,7 @@
  */
 
 import chalk from 'chalk';
-import type { DiffSummary, UpdateKind } from '../core/update/types.ts';
+import type { DiffSummary, UpdateKind } from '../core/update/types';
 
 /** 日志工具对象。 */
 export const logger = {

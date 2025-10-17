@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { type Change, diffLines } from 'diff';
-import { logger } from './logger.ts';
+import { logger } from './logger';
 
 /**
  * 以彩色文本形式打印两份内容的行级差异。

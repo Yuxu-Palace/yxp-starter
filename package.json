@@ -12,7 +12,7 @@
   },
   "type": "module",
   "bin": {
-    "yxp-start": "./bin/index.js"
+    "yxp-start": "./bin/index.cjs"
   },
   "files": [
     "bin",
