@@ -10,9 +10,15 @@ import { runInteractiveUpdate } from '../core/update/interactive';
 import type { UpdateOptions } from '../core/update/types';
 import { createIgnoreMatcher } from '../utils/ignore';
 import { logger } from '../utils/logger';
-import { getTemplatesRoot } from '../utils/path';
 import { showUpdateSummary } from '../utils/summary';
-import { chooseTemplate, readStoredTemplate, writeStoredTemplate } from '../utils/templates';
+import { ensureTemplateReady, selectDownloader } from '../utils/template-fetch';
+import {
+  chooseTemplate,
+  findTemplateOrThrow,
+  readStoredTemplate,
+  type StoredTemplateManifest,
+  writeStoredTemplate,
+} from '../utils/templates';
 
 /**
  * 执行更新命令。
@@ -25,16 +31,14 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
   logger.info('\n🔄 Updating project from yxp-starter...\n');
 
   const currentDir = process.cwd();
-  const templatesRoot = getTemplatesRoot();
 
   try {
     const storedTemplate = await readStoredTemplate(currentDir);
-    const template = await chooseTemplate(templatesRoot, 'Select a template to sync from', storedTemplate ?? undefined);
-    if (storedTemplate !== template.name) {
-      await writeStoredTemplate(currentDir, template.name);
-    }
-    const templatesDir = template.path;
-    logger.detail(`Using template: ${template.name}`);
+    const downloader = await selectDownloader(storedTemplate?.downloader);
+    const template = await resolveTemplateSelection(storedTemplate);
+
+    const { path: templatesDir, commit, downloader: usedDownloader } = await ensureTemplateReady(template, downloader);
+    logger.detail(`Using template ${template.displayName} (${template.name}) @ ${commit}`);
 
     const { ignores: shouldIgnore, hasPatterns } = await createIgnoreMatcher(currentDir);
     if (hasPatterns) {
@@ -46,6 +50,7 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
 
     if (pendingUpdates.length === 0) {
       logger.success('\n✅ All files are up to date!');
+      await writeManifestIfNeeded(currentDir, storedTemplate, template.name, commit, template.source, usedDownloader);
       return;
     }
 
@@ -60,14 +65,57 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
     if (options.all) {
       logger.info('Updating all files...\n');
       await applyBatchUpdate(pendingUpdates, templatesDir, currentDir);
+      await writeManifestIfNeeded(currentDir, storedTemplate, template.name, commit, template.source, usedDownloader);
       logger.success('\n✅ All files updated successfully!');
       return;
     }
 
     await runInteractiveUpdate(pendingUpdates, templatesDir, currentDir);
+    await writeManifestIfNeeded(currentDir, storedTemplate, template.name, commit, template.source, usedDownloader);
     logger.success('\n✅ Update complete!');
   } catch (error) {
     logger.error('\n❌ Update failed:', error);
     process.exit(1);
+  }
+}
+
+async function resolveTemplateSelection(stored: StoredTemplateManifest | null) {
+  let defaultName = stored?.name;
+
+  if (stored?.name) {
+    try {
+      await findTemplateOrThrow(stored.name);
+    } catch {
+      logger.warn(`⚠️ Stored template "${stored.name}" is no longer defined. Please select a new template to continue.`);
+      defaultName = undefined;
+    }
+  }
+
+  return chooseTemplate('Select a template to sync from', defaultName);
+}
+
+async function writeManifestIfNeeded(
+  projectDir: string,
+  stored: StoredTemplateManifest | null,
+  templateName: string,
+  commit: string,
+  source: StoredTemplateManifest['source'],
+  downloader: string,
+): Promise<void> {
+  const manifest: StoredTemplateManifest = {
+    name: templateName,
+    commit,
+    source,
+    appliedAt: new Date().toISOString(),
+    downloader,
+  };
+
+  if (
+    !stored ||
+    stored.name !== manifest.name ||
+    stored.commit !== manifest.commit ||
+    stored.downloader !== manifest.downloader
+  ) {
+    await writeStoredTemplate(projectDir, manifest);
   }
 }

@@ -13,8 +13,10 @@ export function formatJson(
     trailingNewline: JSON_TRAILING_NEWLINE,
   },
 ): string {
-  const serialized = JSON.stringify(payload, null, options.indentSpaces);
-  return serialized + options.trailingNewline;
+  const indentSpaces = options.indentSpaces ?? JSON_INDENT_SPACES;
+  const trailingNewline = options.trailingNewline ?? JSON_TRAILING_NEWLINE;
+  const serialized = JSON.stringify(payload, null, indentSpaces);
+  return serialized + trailingNewline;
 }
 
 /**

@@ -6,8 +6,15 @@ import { copyDirectory, fileExists } from '../utils/fs';
 import { readJsonFile, writeJsonFile } from '../utils/json';
 import { logger } from '../utils/logger';
 import { applyPackageNameField } from '../utils/package-json';
-import { getTemplatesRoot } from '../utils/path';
-import { chooseTemplate, listTemplateOptions, type TemplateOption, writeStoredTemplate } from '../utils/templates';
+import { ensureTemplateReady, selectDownloader } from '../utils/template-fetch';
+import {
+  chooseTemplate,
+  findTemplateOrThrow,
+  listTemplateOptions,
+  type StoredTemplateManifest,
+  type TemplateOption,
+  writeStoredTemplate,
+} from '../utils/templates';
 
 /**
  * 将模板文件复制到目标目录。
@@ -45,7 +52,6 @@ export async function init(projectName: string, options: InitCommandOptions = {}
   logger.info('\n🚀 Welcome to use yxp cli to initialize the project.\n');
 
   const targetDir = path.resolve(process.cwd(), projectName);
-  const templatesRoot = getTemplatesRoot();
 
   if (await fileExists(targetDir)) {
     logger.error(`❌ Directory ${projectName} already exists!`);
@@ -53,14 +59,18 @@ export async function init(projectName: string, options: InitCommandOptions = {}
   }
 
   try {
-    const template = await resolveTemplateSelection(templatesRoot, options.template);
-    logger.info(`\n🧩 Using template: ${template.name}\n`);
+    const downloader = await selectDownloader();
+    const template = await resolveTemplateSelection(options.template);
+    logger.info(`\n🧩 Using template: ${template.displayName} (${template.name})\n`);
+
+    const { path: templateDir, commit, downloader: usedDownloader } = await ensureTemplateReady(template, downloader);
+    logger.detail(`Template commit: ${commit}`);
 
     await fs.mkdir(targetDir, { recursive: true });
     logger.success(`✓ Created directory: ${projectName}`);
 
     logger.info('\n📦 Copying template files...');
-    await copyTemplateContents(template.path, targetDir);
+    await copyTemplateContents(templateDir, targetDir);
 
     logger.info('\n🪄 Customizing template placeholders...');
     await applyTemplatePlaceholders(targetDir, projectName);
@@ -69,7 +79,14 @@ export async function init(projectName: string, options: InitCommandOptions = {}
     await customizePackageJson(targetDir, projectName);
     logger.success('✓ Customized package.json');
 
-    await writeStoredTemplate(targetDir, template.name);
+    const manifest: StoredTemplateManifest = {
+      name: template.name,
+      commit,
+      source: template.source,
+      appliedAt: new Date().toISOString(),
+      downloader: usedDownloader,
+    };
+    await writeStoredTemplate(targetDir, manifest);
 
     logger.success(`\n✅ Project ${projectName} created successfully!\n`);
     logger.detail('Next steps:');
@@ -82,20 +99,20 @@ export async function init(projectName: string, options: InitCommandOptions = {}
   }
 }
 
-async function resolveTemplateSelection(templatesRoot: string, specifiedTemplate?: string): Promise<TemplateOption> {
+async function resolveTemplateSelection(specifiedTemplate?: string): Promise<TemplateOption> {
   if (specifiedTemplate) {
-    const options = await listTemplateOptions(templatesRoot);
-    const matched = options.find((option) => option.name === specifiedTemplate);
-    if (!matched) {
+    try {
+      return await findTemplateOrThrow(specifiedTemplate);
+    } catch {
+      const options = await listTemplateOptions();
       const available = options.map((option) => option.name).join(', ') || 'none';
       logger.error(`❌ Template "${specifiedTemplate}" not found.`);
       logger.note(`Available templates: ${available}`);
       process.exit(1);
     }
-    return matched;
   }
 
-  return chooseTemplate(templatesRoot, 'Select a project template');
+  return chooseTemplate('Select a project template');
 }
 
 // 仅挑选初始化阶段会用到的 package.json 字段。

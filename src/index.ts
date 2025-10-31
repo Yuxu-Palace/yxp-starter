@@ -4,6 +4,9 @@ import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import { init } from './commands/init';
 import { update } from './commands/update';
+import { createGitFallbackPlugin } from './plugins/fallback-git';
+import { createGitDownPlugin } from './plugins/git-down';
+import { registerDownloadPlugins } from './plugins/registry';
 
 const require = createRequire(import.meta.url);
 const pkgInfo = require('../package.json') as {
@@ -14,6 +17,8 @@ const pkgInfo = require('../package.json') as {
 
 const program = new Command();
 const { name: pkgName, version: pkgVersion, description: pkgDescription = '' } = pkgInfo;
+
+registerDownloadPlugins([createGitDownPlugin, createGitFallbackPlugin]);
 
 program.name(pkgName).description(pkgDescription).version(pkgVersion);
 

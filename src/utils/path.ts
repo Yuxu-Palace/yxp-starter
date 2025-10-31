@@ -3,12 +3,13 @@
  */
 
 import { existsSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const PACKAGE_ROOT = resolvePackageRoot();
-const TEMPLATES_ROOT = path.join(PACKAGE_ROOT, 'templates');
+const TEMPLATE_CACHE_ROOT = path.join(os.homedir(), '.yxp-starter', 'templates');
 
 /**
  * 将平台路径转换为 POSIX 风格，方便 ignore 匹配。
@@ -22,13 +23,13 @@ export function getPackageRoot(): string {
   return PACKAGE_ROOT;
 }
 
-/** 获取模板目录的绝对路径。 */
-export function getTemplatesRoot(): string {
-  return TEMPLATES_ROOT;
+/** 获取模板缓存目录。 */
+export function getTemplateCacheRoot(): string {
+  return TEMPLATE_CACHE_ROOT;
 }
 
 function resolvePackageRoot(): string {
-  const candidates = filterEmptyValue([moduleDirname(), cliDirname(), process.cwd()]);
+  const candidates = compact([moduleDirname(), cliDirname(), process.cwd()]);
 
   for (let index = 0; index < candidates.length; index += 1) {
     const startDir = candidates[index];
@@ -54,7 +55,7 @@ function cliDirname(): string | undefined {
   return path.dirname(process.argv[1]);
 }
 
-function filterEmptyValue<T>(values: (T | undefined | null)[]): T[] {
+function compact<T>(values: (T | undefined | null)[]): T[] {
   const filtered: T[] = [];
   for (let index = 0; index < values.length; index += 1) {
     const value = values[index];
