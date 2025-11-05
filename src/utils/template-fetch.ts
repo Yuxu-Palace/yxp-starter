@@ -2,15 +2,10 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import prompts from 'prompts';
-import { createGitFallbackPlugin } from '../plugins/fallback-git';
-import { createGitDownPlugin } from '../plugins/git-down';
-import {
-  getDefaultDownloadPlugin,
-  getDownloadPlugin,
-  listDownloadPlugins,
-  registerDownloadPlugins,
-} from '../plugins/registry';
+import { ensureDefaultDownloadPluginsRegistered } from '../plugins/defaults';
+import { getDefaultDownloadPlugin, getDownloadPlugin, listDownloadPlugins } from '../plugins/registry';
 import type { DownloadContext, TemplateDownloadPlugin } from '../plugins/types';
+import { assertNever } from './assert-never';
 import { copyDirectory, fileExists } from './fs';
 import { logger } from './logger';
 import { getPackageRoot, getTemplateCacheRoot } from './path';
@@ -22,8 +17,11 @@ interface FetchResult {
   downloader: string;
 }
 
-registerDownloadPlugins([createGitDownPlugin, createGitFallbackPlugin]);
+ensureDefaultDownloadPluginsRegistered();
 
+/**
+ * 选择合适的模板下载器，当用户未显式指定或指定无效时提供交互式选择。
+ */
 export async function selectDownloader(preferred?: string): Promise<string | undefined> {
   if (preferred) {
     const existing = getDownloadPlugin(preferred);
@@ -62,22 +60,34 @@ export async function selectDownloader(preferred?: string): Promise<string | und
   return downloader;
 }
 
+/**
+ * 确保模板在本地已准备就绪：对于 git 模板走缓存逻辑，local 模板直接返回路径。
+ */
 export async function ensureTemplateReady(template: TemplateDefinition, downloaderName?: string): Promise<FetchResult> {
-  switch (template.source.type) {
+  const { source } = template;
+  const sourceType = source.type;
+
+  switch (sourceType) {
     case 'git':
-      return fetchGitTemplate(template, template.source, downloaderName);
+      return fetchGitTemplate(template, source, downloaderName);
     case 'local':
-      return resolveLocalTemplate(template.source);
+      return resolveLocalTemplate(source);
     default:
-      throw new Error(`Unsupported template source type: ${String(template.source.type)}`);
+      return assertNever(source, `Unsupported template source type: ${String(sourceType)}`);
   }
 }
 
+/**
+ * 下载远程 git 模板并写入缓存，返回可复用的缓存路径。
+ */
 async function fetchGitTemplate(
   template: TemplateDefinition,
   source: GitTemplateSource,
   downloaderName?: string,
 ): Promise<FetchResult> {
+  /**
+   * 缓存根目录：按模板名划分子目录，便于按提交缓存。
+   */
   const cacheRoot = await ensureCacheRoot();
   const templateCacheDir = path.join(cacheRoot, template.name);
   await fs.mkdir(templateCacheDir, { recursive: true });
@@ -106,6 +116,9 @@ async function fetchGitTemplate(
   return { path: cachePath, commit: result.commit, downloader: plugin.name };
 }
 
+/**
+ * 解析本地模板路径，返回固定的下载结果结构。
+ */
 async function resolveLocalTemplate(source: LocalTemplateSource): Promise<FetchResult> {
   const baseDir = getPackageRoot();
   const resolved = path.isAbsolute(source.path) ? source.path : path.join(baseDir, source.path);
@@ -117,12 +130,18 @@ async function resolveLocalTemplate(source: LocalTemplateSource): Promise<FetchR
   return { path: resolved, commit: 'local', downloader: 'local' };
 }
 
+/**
+ * 确保缓存根目录存在，返回绝对路径。
+ */
 async function ensureCacheRoot(): Promise<string> {
   const cacheRoot = getTemplateCacheRoot();
   await fs.mkdir(cacheRoot, { recursive: true });
   return cacheRoot;
 }
 
+/**
+ * 根据用户偏好或默认策略选择下载插件，必要时触发交互式选择。
+ */
 async function resolveDownloadPlugin(downloaderName?: string): Promise<TemplateDownloadPlugin> {
   const plugins = listDownloadPlugins();
   if (plugins.length === 0) {
@@ -156,6 +175,9 @@ async function resolveDownloadPlugin(downloaderName?: string): Promise<TemplateD
   return plugin;
 }
 
+/**
+ * 下载完成后清理临时目录，忽略潜在删除错误。
+ */
 async function cleanupTemp(tempDir: string): Promise<void> {
   try {
     await fs.rm(tempDir, { recursive: true, force: true });

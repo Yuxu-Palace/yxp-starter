@@ -11,7 +11,7 @@ import { fileExists } from './fs';
 import { toPosixPath } from './path';
 
 /**
- * 构造忽略匹配器，不存在时返回总是允许的匹配器。
+ * 构造忽略匹配器，不存在忽略文件时返回总是允许的匹配器。
  */
 export async function createIgnoreMatcher(
   currentDir: string,

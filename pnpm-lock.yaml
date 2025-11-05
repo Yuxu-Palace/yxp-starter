@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@cmtlyt/git-down':
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.3.1
+        version: 0.3.1
       chalk:
         specifier: ^5.3.0
         version: 5.6.2
@@ -190,8 +190,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cmtlyt/git-down@0.3.0':
-    resolution: {integrity: sha512-Ew97E1V+B1PgqhTbAP1YBjdzQJ14FHHblx/tURLrvHgF0DDj7VKxkOZjFSbR81E9LqRJfvRY12XgNCQzPLN5Ig==}
+  '@cmtlyt/git-down@0.3.1':
+    resolution: {integrity: sha512-mKW/qzL7pGObnAa4WwhXeY8JHRM8HFWVJ8GvOme0BvSBQ0Jhh4S0dUjCAY4V/xScMpvP/i+W2P5YsI3PSmFpHA==}
     hasBin: true
 
   '@commitlint/cli@19.8.1':
@@ -1075,7 +1075,7 @@ snapshots:
   '@biomejs/cli-win32-x64@2.2.5':
     optional: true
 
-  '@cmtlyt/git-down@0.3.0':
+  '@cmtlyt/git-down@0.3.1':
     dependencies:
       citty: 0.1.6
 

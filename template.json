@@ -7,7 +7,7 @@
       "description": "Library starter project hosted remotely.",
       "source": {
         "type": "git",
-        "url": "https://github.com/Yuxu-Palace/yxp-template/tree/main/start/yxp-lib-start",
+        "url": "https://github.com/Yuxu-Palace/yxp-template/tree/feat/yxp-lib-start/start/yxp-lib-start",
         "ref": "feat/yxp-lib-start",
         "path": "start/yxp-lib-start"
       }

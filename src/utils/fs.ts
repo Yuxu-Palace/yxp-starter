@@ -4,7 +4,9 @@ import path from 'node:path';
 // 二进制检测时采样的最大字节数，用于兼顾准确度与性能。
 const BINARY_SAMPLE_SIZE = 4096;
 
-// 粗略判断 Buffer 是否包含大量非文本字符，用于识别二进制文件。
+/**
+ * 粗略判断 Buffer 是否包含大量非文本字符，用于识别二进制文件。
+ */
 function isBinaryBuffer(buffer: Buffer): boolean {
   const length = buffer.length;
   if (length === 0) {

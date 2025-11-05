@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { assertNever } from './assert-never';
 import { readJsonFile } from './json';
 import { getPackageRoot } from './path';
 
@@ -38,6 +39,9 @@ export interface TemplateCatalog {
 
 let cachedCatalog: TemplateCatalog | null = null;
 
+/**
+ * 读取模板配置文件并缓存结果，避免重复 IO。
+ */
 export async function loadTemplateCatalog(): Promise<TemplateCatalog> {
   if (cachedCatalog) {
     return cachedCatalog;
@@ -51,16 +55,25 @@ export async function loadTemplateCatalog(): Promise<TemplateCatalog> {
   return catalog;
 }
 
+/**
+ * 返回模板配置中的所有模板定义列表。
+ */
 export async function listTemplateDefinitions(): Promise<TemplateDefinition[]> {
   const catalog = await loadTemplateCatalog();
   return catalog.templates;
 }
 
+/**
+ * 按名称查找模板定义，找不到时返回 undefined。
+ */
 export async function findTemplateDefinition(name: string): Promise<TemplateDefinition | undefined> {
   const templates = await listTemplateDefinitions();
   return templates.find((template) => template.name === name);
 }
 
+/**
+ * 校验模板配置结构与字段有效性。
+ */
 function validateCatalog(catalog: TemplateCatalog, configPath: string): void {
   if (!(catalog && Array.isArray(catalog.templates))) {
     throw new Error(`Invalid template catalog in ${configPath}: missing "templates" array.`);
@@ -84,8 +97,13 @@ function validateCatalog(catalog: TemplateCatalog, configPath: string): void {
   }
 }
 
+/**
+ * 针对不同来源类型校验必要字段。
+ */
 function validateSource(templateName: string, source: TemplateSource): void {
-  switch (source.type) {
+  const sourceType = source.type;
+
+  switch (sourceType) {
     case 'git':
       if (!('url' in source) || typeof source.url !== 'string') {
         throw new Error(`Template "${templateName}" must specify a git "url".`);
@@ -97,6 +115,6 @@ function validateSource(templateName: string, source: TemplateSource): void {
       }
       break;
     default:
-      throw new Error(`Template "${templateName}" has unsupported source type "${String(source.type)}".`);
+      assertNever(source, `Template "${templateName}" has unsupported source type "${String(sourceType)}".`);
   }
 }

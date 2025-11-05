@@ -5,6 +5,9 @@ import type { GitTemplateSource } from '../utils/template-config';
 import { runGitCommand } from './git-runner';
 import type { DownloadContext, DownloadResult, TemplateDownloadPlugin } from './types';
 
+/**
+ * 使用系统 git 克隆仓库，作为 git-down 失败时的兜底方案。
+ */
 async function downloadWithGit(context: DownloadContext): Promise<DownloadResult> {
   const { template, tempDir } = context;
   const source = template.source as GitTemplateSource;
@@ -29,6 +32,9 @@ async function downloadWithGit(context: DownloadContext): Promise<DownloadResult
   return { path: resolvedPath, commit: branch };
 }
 
+/**
+ * 创建基于系统 git 的插件定义，确保在缺少 git-down 支持时仍可下载模板。
+ */
 export function createGitFallbackPlugin(): TemplateDownloadPlugin {
   return {
     name: 'builtin-git',

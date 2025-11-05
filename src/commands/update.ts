@@ -13,6 +13,7 @@ import { logger } from '../utils/logger';
 import { showUpdateSummary } from '../utils/summary';
 import { ensureTemplateReady, selectDownloader } from '../utils/template-fetch';
 import {
+  buildStoredTemplateManifest,
   chooseTemplate,
   findTemplateOrThrow,
   readStoredTemplate,
@@ -21,11 +22,7 @@ import {
 } from '../utils/templates';
 
 /**
- * 执行更新命令。
- *
- * @param options - 命令选项
- * @param options.all - 批量更新全部文件
- * @param options.skipAll - 预览模式，不执行更新
+ * 执行更新命令，根据配置选择批量或交互式应用模板差异。
  */
 export async function update(options: UpdateOptions = {}): Promise<void> {
   logger.info('\n🔄 Updating project from yxp-starter...\n');
@@ -79,6 +76,9 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
   }
 }
 
+/**
+ * 根据历史记录或用户交互确定用于同步的模板。
+ */
 async function resolveTemplateSelection(stored: StoredTemplateManifest | null) {
   let defaultName = stored?.name;
 
@@ -94,6 +94,9 @@ async function resolveTemplateSelection(stored: StoredTemplateManifest | null) {
   return chooseTemplate('Select a template to sync from', defaultName);
 }
 
+/**
+ * 根据更新结果记录最新的模板元数据，避免重复写入。
+ */
 async function writeManifestIfNeeded(
   projectDir: string,
   stored: StoredTemplateManifest | null,
@@ -102,13 +105,12 @@ async function writeManifestIfNeeded(
   source: StoredTemplateManifest['source'],
   downloader: string,
 ): Promise<void> {
-  const manifest: StoredTemplateManifest = {
+  const manifest = buildStoredTemplateManifest({
     name: templateName,
     commit,
     source,
-    appliedAt: new Date().toISOString(),
     downloader,
-  };
+  });
 
   if (
     !stored ||

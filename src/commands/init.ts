@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import prompts from 'prompts';
 import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants';
 import { copyDirectory, fileExists } from '../utils/fs';
 import { readJsonFile, writeJsonFile } from '../utils/json';
@@ -8,10 +9,10 @@ import { logger } from '../utils/logger';
 import { applyPackageNameField } from '../utils/package-json';
 import { ensureTemplateReady, selectDownloader } from '../utils/template-fetch';
 import {
+  buildStoredTemplateManifest,
   chooseTemplate,
   findTemplateOrThrow,
   listTemplateOptions,
-  type StoredTemplateManifest,
   type TemplateOption,
   writeStoredTemplate,
 } from '../utils/templates';
@@ -48,17 +49,18 @@ interface InitCommandOptions {
 /**
  * 初始化新项目。
  */
-export async function init(projectName: string, options: InitCommandOptions = {}): Promise<void> {
+export async function init(rawProjectName: string | undefined, options: InitCommandOptions = {}): Promise<void> {
   logger.info('\n🚀 Welcome to use yxp cli to initialize the project.\n');
 
-  const targetDir = path.resolve(process.cwd(), projectName);
-
-  if (await fileExists(targetDir)) {
-    logger.error(`❌ Directory ${projectName} already exists!`);
-    process.exit(1);
-  }
-
   try {
+    const projectName = await resolveProjectName(rawProjectName);
+    const targetDir = path.resolve(process.cwd(), projectName);
+
+    if (await fileExists(targetDir)) {
+      logger.error(`❌ Directory ${projectName} already exists!`);
+      process.exit(1);
+    }
+
     const downloader = await selectDownloader();
     const template = await resolveTemplateSelection(options.template);
     logger.info(`\n🧩 Using template: ${template.displayName} (${template.name})\n`);
@@ -79,13 +81,12 @@ export async function init(projectName: string, options: InitCommandOptions = {}
     await customizePackageJson(targetDir, projectName);
     logger.success('✓ Customized package.json');
 
-    const manifest: StoredTemplateManifest = {
+    const manifest = buildStoredTemplateManifest({
       name: template.name,
       commit,
       source: template.source,
-      appliedAt: new Date().toISOString(),
       downloader: usedDownloader,
-    };
+    });
     await writeStoredTemplate(targetDir, manifest);
 
     logger.success(`\n✅ Project ${projectName} created successfully!\n`);
@@ -99,6 +100,36 @@ export async function init(projectName: string, options: InitCommandOptions = {}
   }
 }
 
+/**
+ * 解析项目名称，若未提供则通过交互式提问获取。
+ */
+async function resolveProjectName(inputName?: string): Promise<string> {
+  const normalized = inputName?.trim();
+  if (normalized) {
+    return normalized;
+  }
+
+  const { projectName } = await prompts(
+    {
+      type: 'text',
+      name: 'projectName',
+      message: 'Project name',
+      initial: 'my-project',
+      validate: (value: string) => (value.trim().length > 0 ? true : 'Please enter a project name.'),
+    },
+    {
+      onCancel: () => {
+        throw new Error('Project initialization cancelled.');
+      },
+    },
+  );
+
+  return projectName.trim();
+}
+
+/**
+ * 根据用户输入或交互式选择确定要使用的模板。
+ */
 async function resolveTemplateSelection(specifiedTemplate?: string): Promise<TemplateOption> {
   if (specifiedTemplate) {
     try {

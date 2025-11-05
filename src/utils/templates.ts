@@ -23,6 +23,17 @@ export interface StoredTemplateManifest {
   downloader?: string;
 }
 
+interface BuildManifestOptions {
+  name: string;
+  commit: string;
+  source: TemplateSource;
+  downloader: string;
+  appliedAt?: string;
+}
+
+/**
+ * 列出配置文件中声明的模板选项。
+ */
 export async function listTemplateOptions(): Promise<TemplateOption[]> {
   return listTemplateDefinitions();
 }
@@ -111,6 +122,23 @@ export async function writeStoredTemplate(projectDir: string, manifest: StoredTe
   await writeJsonFile(manifestPath, manifest);
 }
 
+/**
+ * 构造标准化的模板清单，附带当前时间戳。
+ */
+export function buildStoredTemplateManifest(options: BuildManifestOptions): StoredTemplateManifest {
+  const { name, commit, source, downloader, appliedAt } = options;
+  return {
+    name,
+    commit,
+    source,
+    downloader,
+    appliedAt: appliedAt ?? new Date().toISOString(),
+  };
+}
+
+/**
+ * 查找模板定义，未找到时抛出异常提示。
+ */
 export async function findTemplateOrThrow(name: string): Promise<TemplateDefinition> {
   const template = await findTemplateDefinition(name);
   if (!template) {
