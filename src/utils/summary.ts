@@ -1,7 +1,3 @@
-/**
- * 输出待更新文件的分组摘要。
- */
-
 import chalk from 'chalk';
 import type { PendingUpdate } from '../core/update/types';
 import { logger } from './logger';
@@ -17,7 +13,7 @@ export function showUpdateSummary(updates: PendingUpdate[]): void {
   // 修改的文件
   if (grouped.modify.length > 0) {
     logger.plain(chalk.cyan.bold(`  Modified (${grouped.modify.length}):`));
-    for (let index = 0; index < grouped.modify.length; index += 1) {
+    for (let index = 0; index < grouped.modify.length; ++index) {
       const update = grouped.modify[index];
       const stats = formatStats(update);
       logger.plain(chalk.cyan(`    • ${update.file.path}${stats}`));
@@ -28,7 +24,7 @@ export function showUpdateSummary(updates: PendingUpdate[]): void {
   // 新增的文件
   if (grouped.add.length > 0) {
     logger.plain(chalk.green.bold(`  Added (${grouped.add.length}):`));
-    for (let index = 0; index < grouped.add.length; index += 1) {
+    for (let index = 0; index < grouped.add.length; ++index) {
       const update = grouped.add[index];
       const stats = formatStats(update);
       logger.plain(chalk.green(`    • ${update.file.path}${stats}`));
@@ -39,7 +35,7 @@ export function showUpdateSummary(updates: PendingUpdate[]): void {
   // 删除的文件
   if (grouped.delete.length > 0) {
     logger.plain(chalk.red.bold(`  Deleted (${grouped.delete.length}):`));
-    for (let index = 0; index < grouped.delete.length; index += 1) {
+    for (let index = 0; index < grouped.delete.length; ++index) {
       const update = grouped.delete[index];
       const stats = formatStats(update);
       logger.plain(chalk.red(`    • ${update.file.path}${stats}`));
@@ -58,7 +54,7 @@ function groupUpdatesByKind(updates: PendingUpdate[]): Record<string, PendingUpd
     delete: [],
   };
 
-  for (let index = 0; index < updates.length; index += 1) {
+  for (let index = 0; index < updates.length; ++index) {
     const update = updates[index];
     grouped[update.kind].push(update);
   }

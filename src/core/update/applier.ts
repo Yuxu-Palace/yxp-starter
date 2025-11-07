@@ -1,18 +1,20 @@
-/**
- * 将模板中的改动写入当前项目。
- */
-
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { logger } from '../../utils/logger';
-import { getTargetPackageName, sanitizePackageJsonContent } from '../../utils/package-json';
+import { applyPreservedJsonFields, readJsonFileFields } from '../../utils/package-json';
+import { toPosixPath } from '../../utils/path';
 import { createProgressTracker } from '../../utils/progress';
-import type { PendingUpdate } from './types';
+import type { ApplyUpdateOptions, PendingUpdate } from './types';
 
 /**
  * 处理单个待更新文件并落盘。
  */
-export async function applyUpdate(pending: PendingUpdate, templatesDir: string, currentDir: string): Promise<void> {
+export async function applyUpdate(
+  pending: PendingUpdate,
+  templatesDir: string,
+  currentDir: string,
+  options: ApplyUpdateOptions,
+): Promise<void> {
   if (pending.kind === 'delete') {
     return applyFileDeletion(pending.file.path, currentDir);
   }
@@ -20,8 +22,11 @@ export async function applyUpdate(pending: PendingUpdate, templatesDir: string, 
   const sourcePath = path.join(templatesDir, pending.file.path);
   const targetPath = path.join(currentDir, pending.file.path);
 
-  if (pending.file.path === 'package.json') {
-    return applyPackageJsonUpdate(pending, sourcePath, targetPath);
+  const normalizedPath = toPosixPath(pending.file.path);
+  const jsonPreserveFields = options.jsonPreserveMap[normalizedPath];
+
+  if (jsonPreserveFields && jsonPreserveFields.length > 0) {
+    return applyJsonFileUpdate(pending, sourcePath, targetPath, jsonPreserveFields);
   }
 
   return applyRegularFileUpdate(pending, sourcePath, targetPath);
@@ -34,10 +39,11 @@ export async function applyBatchUpdate(
   updates: PendingUpdate[],
   templatesDir: string,
   currentDir: string,
+  options: ApplyUpdateOptions,
 ): Promise<void> {
   const progress = createProgressTracker(updates.length);
 
-  for (let index = 0; index < updates.length; index += 1) {
+  for (let index = 0; index < updates.length; ++index) {
     const pending = updates[index];
 
     if (index === 0) {
@@ -46,7 +52,7 @@ export async function applyBatchUpdate(
       await progress.next(pending.file.path);
     }
 
-    await applyUpdate(pending, templatesDir, currentDir);
+    await applyUpdate(pending, templatesDir, currentDir, options);
   }
 
   progress.finish();
@@ -65,10 +71,15 @@ async function applyFileDeletion(filePath: string, currentDir: string): Promise<
 /**
  * 更新 `package.json`，同时保留项目原有名称。
  */
-async function applyPackageJsonUpdate(pending: PendingUpdate, sourcePath: string, targetPath: string): Promise<void> {
+async function applyJsonFileUpdate(
+  pending: PendingUpdate,
+  sourcePath: string,
+  targetPath: string,
+  fieldsToPreserve: string[],
+): Promise<void> {
   const sourceRaw = await fs.readFile(sourcePath, 'utf-8');
-  const targetName = await getTargetPackageName(targetPath);
-  const sanitizedContent = sanitizePackageJsonContent(sourceRaw, targetName);
+  const preservedFields = await readJsonFileFields(targetPath, fieldsToPreserve);
+  const sanitizedContent = applyPreservedJsonFields(sourceRaw, preservedFields);
 
   await fs.mkdir(path.dirname(targetPath), { recursive: true });
   await fs.writeFile(targetPath, sanitizedContent);

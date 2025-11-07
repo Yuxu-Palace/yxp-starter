@@ -1,7 +1,3 @@
-/**
- * 负责生成模板与当前项目之间的差异列表。
- */
-
 import path from 'node:path';
 import { getDiffStats } from '../../utils/diff';
 import { fileExists, readFileContent } from '../../utils/fs';
@@ -17,12 +13,13 @@ export async function collectPendingUpdates(
   templatesDir: string,
   currentDir: string,
   shouldIgnore: IgnoreMatcher,
+  jsonPreserveMap: Record<string, string[]>,
 ): Promise<PendingUpdate[]> {
   const allTemplateFiles = await scanTemplateFiles(templatesDir, shouldIgnore);
   const projectFiles = await scanProjectFiles(currentDir, allTemplateFiles, shouldIgnore);
   const updates: PendingUpdate[] = [];
 
-  for (let index = 0; index < allTemplateFiles.length; index += 1) {
+  for (let index = 0; index < allTemplateFiles.length; ++index) {
     const file = allTemplateFiles[index];
     const templateUpdates = await buildUpdatesForTemplateFile(
       file,
@@ -30,6 +27,7 @@ export async function collectPendingUpdates(
       currentDir,
       projectFiles,
       shouldIgnore,
+      jsonPreserveMap,
     );
     updates.push(...templateUpdates);
   }
@@ -63,6 +61,7 @@ async function buildUpdatesForTemplateFile(
   currentDir: string,
   projectFiles: Set<string>,
   shouldIgnore: IgnoreMatcher,
+  jsonPreserveMap: Record<string, string[]>,
 ): Promise<PendingUpdate[]> {
   const sourcePath = path.join(templatesDir, file.path);
   const targetPath = path.join(currentDir, file.path);
@@ -74,10 +73,11 @@ async function buildUpdatesForTemplateFile(
     shouldIgnore,
     sourcePath,
     targetPath,
+    jsonPreserveMap,
   };
 
   const handlers = getTemplateUpdateHandlers();
-  for (let index = 0; index < handlers.length; index += 1) {
+  for (let index = 0; index < handlers.length; ++index) {
     const handler = handlers[index];
     if (await handler.matches(context)) {
       return handler.handle(context);

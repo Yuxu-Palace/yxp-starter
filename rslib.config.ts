@@ -16,8 +16,6 @@ export default defineConfig({
   output: {
     distPath: {
       root: 'bin',
-      js: './',
-      jsAsync: './',
     },
     filename: {
       js: '[name].cjs',

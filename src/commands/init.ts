@@ -23,7 +23,7 @@ import {
 async function copyTemplateContents(templatesDir: string, targetDir: string): Promise<void> {
   const entries = await fs.readdir(templatesDir, { withFileTypes: true });
 
-  for (let index = 0; index < entries.length; index += 1) {
+  for (let index = 0; index < entries.length; ++index) {
     const entry = entries[index];
     if (TEMPLATE_IGNORE_ENTRIES.has(entry.name)) {
       continue;
@@ -159,7 +159,7 @@ type TemplatePackageJson = {
 async function applyTemplatePlaceholders(targetDir: string, projectName: string): Promise<void> {
   const filesToCustomize = ['README.md'];
 
-  for (let index = 0; index < filesToCustomize.length; index += 1) {
+  for (let index = 0; index < filesToCustomize.length; ++index) {
     const relativePath = filesToCustomize[index];
     const absolutePath = path.join(targetDir, relativePath);
     if (!(await fileExists(absolutePath))) {

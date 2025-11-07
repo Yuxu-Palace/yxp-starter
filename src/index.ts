@@ -1,17 +1,10 @@
 #!/usr/bin/env node
 
-import { createRequire } from 'node:module';
 import { Command } from 'commander';
+import pkgInfo from '../package.json';
 import { init } from './commands/init';
 import { update } from './commands/update';
 import { ensureDefaultDownloadPluginsRegistered } from './plugins/defaults';
-
-const require = createRequire(import.meta.url);
-const pkgInfo = require('../package.json') as {
-  name: string;
-  description?: string;
-  version: string;
-};
 
 const program = new Command();
 const { name: pkgName, version: pkgVersion, description: pkgDescription = '' } = pkgInfo;

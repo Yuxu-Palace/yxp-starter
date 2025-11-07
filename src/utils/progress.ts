@@ -1,7 +1,3 @@
-/**
- * 基于 cli-progress-footer 的终端进度条封装。
- */
-
 import process from 'node:process';
 import chalk from 'chalk';
 import cliProgressFooter from 'cli-progress-footer';

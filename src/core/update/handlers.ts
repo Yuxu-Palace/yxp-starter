@@ -1,12 +1,9 @@
-/**
- * 定义更新流程中用到的各类处理器。
- */
-
 import { promises as fs } from 'node:fs';
 import { getDiffStats } from '../../utils/diff';
 import { fileExists, readFileContent } from '../../utils/fs';
 import { logDiffResult } from '../../utils/logger';
-import { getPackageName, sanitizePackageJsonContent } from '../../utils/package-json';
+import { applyPreservedJsonFields, extractFieldsFromJsonContent } from '../../utils/package-json';
+import { toPosixPath } from '../../utils/path';
 import { SKIPPED_DYNAMIC_FILES } from './constants';
 import type { DiffSummary, FileUpdate, PendingUpdate, TemplateUpdateHandler } from './types';
 
@@ -45,20 +42,21 @@ export async function buildAdditionUpdates(file: FileUpdate, sourcePath: string)
 }
 
 /**
- * 生成 `package.json` 的差异记录并保留项目名称。
+ * 生成需要保留字段的 JSON 文件差异。
  */
-export async function buildPackageJsonUpdates(
+export async function buildJsonFileUpdates(
   file: FileUpdate,
   sourcePath: string,
   targetPath: string,
+  fieldsToPreserve: string[],
 ): Promise<PendingUpdate[]> {
   const [sourceRaw, targetRaw] = await Promise.all([
     fs.readFile(sourcePath, 'utf-8'),
     fs.readFile(targetPath, 'utf-8'),
   ]);
-  const targetName = getPackageName(targetRaw);
-  const sanitizedSource = sanitizePackageJsonContent(sourceRaw, targetName);
-  const sanitizedTarget = sanitizePackageJsonContent(targetRaw, targetName);
+  const preservedFields = extractFieldsFromJsonContent(targetRaw, fieldsToPreserve);
+  const sanitizedSource = applyPreservedJsonFields(sourceRaw, preservedFields);
+  const sanitizedTarget = applyPreservedJsonFields(targetRaw, preservedFields);
 
   if (sanitizedSource === sanitizedTarget) {
     return [];
@@ -150,12 +148,18 @@ export function getTemplateUpdateHandlers(): TemplateUpdateHandler[] {
       handle: async ({ file, sourcePath }) => buildAdditionUpdates(file, sourcePath),
     },
 
-    // 针对 package.json 保留项目名称
+    // 针对声明了保留字段的 JSON 文件
     {
-      matches: ({ file }) => file.path === 'package.json',
-      handle: async ({ file, sourcePath, targetPath, projectFiles }) => {
+      matches: ({ file, jsonPreserveMap }) => {
+        const normalizedPath = toPosixPath(file.path);
+        const fields = jsonPreserveMap[normalizedPath];
+        return Array.isArray(fields) && fields.length > 0;
+      },
+      handle: async ({ file, sourcePath, targetPath, projectFiles, jsonPreserveMap }) => {
         projectFiles.delete(file.path);
-        return buildPackageJsonUpdates(file, sourcePath, targetPath);
+        const normalizedPath = toPosixPath(file.path);
+        const fields = jsonPreserveMap[normalizedPath] ?? [];
+        return buildJsonFileUpdates(file, sourcePath, targetPath, fields);
       },
     },
 

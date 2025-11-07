@@ -1,7 +1,3 @@
-/**
- * 处理跨平台路径差异与运行时路径解析。
- */
-
 import { existsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -34,7 +30,7 @@ export function getTemplateCacheRoot(): string {
 function resolvePackageRoot(): string {
   const candidates = compact([moduleDirname(), cliDirname(), process.cwd()]);
 
-  for (let index = 0; index < candidates.length; index += 1) {
+  for (let index = 0; index < candidates.length; ++index) {
     const startDir = candidates[index];
     const resolved = findUpwards(startDir, 'package.json');
     if (resolved) {
@@ -69,7 +65,7 @@ function cliDirname(): string | undefined {
  */
 function compact<T>(values: (T | undefined | null)[]): T[] {
   const filtered: T[] = [];
-  for (let index = 0; index < values.length; index += 1) {
+  for (let index = 0; index < values.length; ++index) {
     const value = values[index];
     if (value) {
       filtered.push(value);

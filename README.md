@@ -22,7 +22,7 @@ yxp-starter is the official scaffolding and update CLI for the yuxu-palace ecosy
 - Interactive template selection through the `init` command, copying only the files that matter while skipping `node_modules`, `.pnpm`, `dist`, and other boilerplate directories.
 - Smart placeholder and metadata handling keeps generated READMEs up to date, preserves the project `package.json` name, and records the chosen template in `.yxp-template`.
 - Diff-driven updates compare template and project files, preview colourised diffs (with binary detection), and support unattended runs via `--all` or dry runs via `--skip-all`.
-- Gitignore-style exclusions through `.yxpignore` plus built-in skip lists prevent local-only files from being touched.
+- Gitignore-style exclusions through `.yxpignore` or `yxp.config.js` (with `update.ignore` / `update.include`) plus built-in skip lists prevent local-only files from being touched.
 - Utility helpers standardise JSON formatting, file I/O, logging, progress indicators, and template selection for consistent behaviour across commands.
 
 ## Architecture
@@ -76,6 +76,62 @@ pnpm dlx yxp-start update --skip-all
 ```
 
 The updater respects `.yxpignore`, skips dynamic files such as `README.md`, and shows a live progress footer while applying batches.
+
+### Ignore configuration
+
+- **Defaults**: `yxp-start update` ignores common build artifacts (`node_modules`, `dist`, `.turbo`, etc.) out of the box so templates stay lean.
+- **`.yxpignore`**: add Gitignore-style patterns in the project root to exclude or re-include paths (supports `!pattern` overrides).
+- **`yxp.config.js`**: declare structured rules when you prefer JavaScript config. Both `ignore` and `include` accept glob patterns and merge with the defaults and `.yxpignore` content:
+
+```js
+// yxp.config.js
+export default {
+  update: {
+    ignore: ['src/**', 'tests/**'],
+    include: ['src/config.ts'],
+  },
+};
+```
+
+`include` entries always win—even if the same path is ignored elsewhere—making it simple to copy a single file out of a larger ignored tree.
+
+### JSON preservation
+
+- By default, `yxp-start update` always keeps the `name` field from `package.json`.
+- Use `update.jsonFiles` to protect any JSON file by relative path (POSIX-style). Only existing fields in the project file are copied back, so optional data remains untouched unless present.
+
+```js
+// yxp.config.js
+export default {
+  update: {
+    jsonFiles: {
+      'package.json': { preserve: ['name', 'version', 'publishConfig'] },
+      'src/config/app.json': { preserve: ['featureFlags', 'releaseChannel'] },
+    },
+  },
+};
+```
+
+### Complete `yxp.config.js`
+
+Use all knobs together to tailor the updater:
+
+```js
+// yxp.config.js
+export default {
+  update: {
+    ignore: ['docs/**', 'scripts/**'],      // extra files to skip
+    include: ['scripts/release.js'],        // but still allow this file through
+    skipDynamic: ['README.md'],             // optional: extend dynamic skip list
+    jsonFiles: {
+      'package.json': { preserve: ['name', 'version', 'publishConfig'] },
+      'src/config/app.json': { preserve: ['featureFlags'] },
+    },
+  },
+};
+```
+
+Any field inside `update` is optional—omit what you don’t need and the CLI will fall back to its built-in defaults.
 
 ## Examples
 - **Bootstrap a library**: `pnpm dlx yxp-start init my-lib --template yxp-lib-start` to scaffold a Rslib + Vitest powered package with Biome linting ready to go.

@@ -17,7 +17,7 @@ function isBinaryBuffer(buffer: Buffer): boolean {
   const sampleSize = Math.min(length, BINARY_SAMPLE_SIZE);
   let suspicious = 0;
 
-  for (let index = 0; index < sampleSize; index += 1) {
+  for (let index = 0; index < sampleSize; ++index) {
     const byte = buffer[index];
     if (byte === 0) {
       return true;
@@ -59,7 +59,7 @@ export async function copyDirectory(src: string, dest: string): Promise<void> {
   await fs.mkdir(dest, { recursive: true });
   const entries = await fs.readdir(src, { withFileTypes: true });
 
-  for (let index = 0; index < entries.length; index += 1) {
+  for (let index = 0; index < entries.length; ++index) {
     const entry = entries[index];
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);

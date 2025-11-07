@@ -1,11 +1,6 @@
-/**
- * 扫描模板与项目文件，用于后续差异分析。
- */
-
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileExists } from '../../utils/fs';
-import { IGNORED_PROJECT_ENTRIES, IGNORED_TEMPLATE_ENTRIES } from './constants';
 import type { FileUpdate, IgnoreMatcher } from './types';
 
 /**
@@ -28,11 +23,8 @@ async function scanDirectory(
 ): Promise<void> {
   const directoryEntries = await fs.readdir(dirPath, { withFileTypes: true });
 
-  for (let index = 0; index < directoryEntries.length; index += 1) {
+  for (let index = 0; index < directoryEntries.length; ++index) {
     const entry = directoryEntries[index];
-    if (shouldSkipTemplateEntry(entry.name)) {
-      continue;
-    }
 
     const fullPath = path.join(dirPath, entry.name);
     const relativePath = path.relative(basePath, fullPath);
@@ -52,13 +44,6 @@ async function scanDirectory(
 }
 
 /**
- * 判断模板目录项是否需要跳过。
- */
-function shouldSkipTemplateEntry(entryName: string): boolean {
-  return IGNORED_TEMPLATE_ENTRIES.has(entryName);
-}
-
-/**
  * 把扫描到的文件写入结果列表。
  */
 function processScannedFile(files: FileUpdate[], relativePath: string): void {
@@ -74,7 +59,7 @@ function processScannedFile(files: FileUpdate[], relativePath: string): void {
 export function getTopLevelEntries(files: FileUpdate[]): Set<string> {
   const entries = new Set<string>();
 
-  for (let index = 0; index < files.length; index += 1) {
+  for (let index = 0; index < files.length; ++index) {
     const file = files[index];
     const [topLevel] = file.path.split(path.sep);
     entries.add(topLevel ?? file.path);
@@ -130,11 +115,8 @@ async function scanProjectDirectory(
 ): Promise<void> {
   const directoryEntries = await fs.readdir(dirPath, { withFileTypes: true });
 
-  for (let index = 0; index < directoryEntries.length; index += 1) {
+  for (let index = 0; index < directoryEntries.length; ++index) {
     const entry = directoryEntries[index];
-    if (shouldSkipProjectEntry(entry.name)) {
-      continue;
-    }
 
     const fullPath = path.join(dirPath, entry.name);
     const relativePath = path.relative(basePath, fullPath);
@@ -151,11 +133,4 @@ async function scanProjectDirectory(
       files.add(relativePath);
     }
   }
-}
-
-/**
- * 判断项目目录项是否需要跳过。
- */
-function shouldSkipProjectEntry(entryName: string): boolean {
-  return IGNORED_PROJECT_ENTRIES.has(entryName);
 }

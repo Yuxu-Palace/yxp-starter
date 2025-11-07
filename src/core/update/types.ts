@@ -1,7 +1,3 @@
-/**
- * 更新流程使用的类型定义。
- */
-
 /** CLI 选项。 */
 export interface UpdateOptions {
   all?: boolean;
@@ -61,6 +57,7 @@ export interface TemplateUpdateContext {
   shouldIgnore: IgnoreMatcher;
   sourcePath: string;
   targetPath: string;
+  jsonPreserveMap: Record<string, string[]>;
 }
 
 /** 模板更新处理器接口。 */
@@ -78,12 +75,17 @@ export interface PromptConfig {
 /** 用户操作。 */
 export type UpdateAction = 'update' | 'skip' | 'update-all' | 'skip-all';
 
+export interface ApplyUpdateOptions {
+  jsonPreserveMap: Record<string, string[]>;
+}
+
 /** 用户操作处理器的上下文。 */
 export interface UpdateActionContext {
   pending: PendingUpdate;
   remaining: PendingUpdate[];
   templatesDir: string;
   currentDir: string;
+  applyOptions: ApplyUpdateOptions;
 }
 
 /** 交互动作处理器。 */

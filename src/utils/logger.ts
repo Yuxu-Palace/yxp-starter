@@ -1,7 +1,3 @@
-/**
- * 封装 chalk，提供语义化的彩色日志输出。
- */
-
 import chalk from 'chalk';
 import type { DiffSummary, UpdateKind } from '../core/update/types';
 

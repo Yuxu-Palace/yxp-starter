@@ -79,7 +79,7 @@ function validateCatalog(catalog: TemplateCatalog, configPath: string): void {
     throw new Error(`Invalid template catalog in ${configPath}: missing "templates" array.`);
   }
 
-  for (let index = 0; index < catalog.templates.length; index += 1) {
+  for (let index = 0; index < catalog.templates.length; ++index) {
     const template = catalog.templates[index];
     if (!template || typeof template !== 'object') {
       throw new Error(`Invalid template definition at index ${index} in ${configPath}.`);

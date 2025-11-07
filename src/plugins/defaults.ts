@@ -1,4 +1,3 @@
-import { createGitFallbackPlugin } from './fallback-git';
 import { createGitDownPlugin } from './git-down';
 import { listDownloadPlugins, registerDownloadPlugins } from './registry';
 
@@ -13,7 +12,7 @@ export function ensureDefaultDownloadPluginsRegistered(): void {
     return;
   }
 
-  // 注册 git-down 与系统 git 两类兜底插件，覆盖线上远程与本地环境。
-  registerDownloadPlugins([createGitDownPlugin, createGitFallbackPlugin]);
+  // 注册 git-down 作为默认下载插件。
+  registerDownloadPlugins([createGitDownPlugin]);
   defaultsRegistered = true;
 }

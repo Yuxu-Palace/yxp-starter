@@ -13,7 +13,7 @@ export function showDiff(oldContent: string, newContent: string, fileName: strin
   let addedLines = 0;
   let removedLines = 0;
 
-  for (let index = 0; index < diff.length; index += 1) {
+  for (let index = 0; index < diff.length; ++index) {
     const part = diff[index];
     // diffLines 会把连续内容放在同一个片段，需要逐行拆分。
     const lines = part.value.split('\n').filter((line, lineIndex, arr) => {
@@ -21,7 +21,7 @@ export function showDiff(oldContent: string, newContent: string, fileName: strin
       return lineIndex < arr.length - 1 || line !== '';
     });
 
-    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    for (let lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
       const line = lines[lineIndex];
       if (part.added) {
         logger.plain(chalk.green(`+ ${line}`));
@@ -47,7 +47,7 @@ export function getDiffStats(oldContent: string, newContent: string): { added: n
   let added = 0;
   let removed = 0;
 
-  for (let index = 0; index < diff.length; index += 1) {
+  for (let index = 0; index < diff.length; ++index) {
     const part = diff[index];
     const lines = part.value.split('\n').filter((line, lineIndex, arr) => lineIndex < arr.length - 1 || line !== '');
     // 每个片段的有效行数作为增删统计依据。

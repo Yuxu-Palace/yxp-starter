@@ -23,7 +23,7 @@ async function downloadWithGitDown(context: DownloadContext): Promise<DownloadRe
   logger.note(`Downloading template ${template.name} via git-down...`);
   await gitDown(templateUrl, { output: tempDir, branch });
 
-  const finalPath = subPath ? path.join(tempDir, path.basename(subPath)) : tempDir;
+  const finalPath = subPath ? path.join(tempDir, subPath) : tempDir;
 
   if (!(await fileExists(finalPath))) {
     throw new Error(`git-down did not create expected path: ${finalPath}`);

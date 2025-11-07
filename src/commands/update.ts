@@ -1,10 +1,5 @@
-/**
- * 从模板目录同步文件到当前项目。
- */
-
 import process from 'node:process';
 import { applyBatchUpdate } from '../core/update/applier';
-import { IGNORED_FILE_NAME } from '../core/update/constants';
 import { collectPendingUpdates } from '../core/update/differ';
 import { runInteractiveUpdate } from '../core/update/interactive';
 import type { UpdateOptions } from '../core/update/types';
@@ -20,6 +15,7 @@ import {
   type StoredTemplateManifest,
   writeStoredTemplate,
 } from '../utils/templates';
+import { buildJsonPreserveMap, loadYxpConfig } from '../utils/yxp-config';
 
 /**
  * 执行更新命令，根据配置选择批量或交互式应用模板差异。
@@ -37,13 +33,18 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
     const { path: templatesDir, commit, downloader: usedDownloader } = await ensureTemplateReady(template, downloader);
     logger.detail(`Using template ${template.displayName} (${template.name}) @ ${commit}`);
 
-    const { ignores: shouldIgnore, hasPatterns } = await createIgnoreMatcher(currentDir);
-    if (hasPatterns) {
-      logger.note(`Using ignore rules from ${IGNORED_FILE_NAME}`);
+    const loadedConfig = await loadYxpConfig(currentDir);
+    const updateConfig = loadedConfig?.config.update;
+    const jsonPreserveMap = buildJsonPreserveMap(updateConfig);
+    const applyOptions = { jsonPreserveMap };
+
+    const { ignores: shouldIgnore, sources: ignoreSources } = await createIgnoreMatcher(currentDir, loadedConfig);
+    if (ignoreSources.length > 0) {
+      logger.note(`Using ignore rules from ${ignoreSources.join(', ')}`);
     }
 
     logger.info('📂 Scanning for updates...\n');
-    const pendingUpdates = await collectPendingUpdates(templatesDir, currentDir, shouldIgnore);
+    const pendingUpdates = await collectPendingUpdates(templatesDir, currentDir, shouldIgnore, jsonPreserveMap);
 
     if (pendingUpdates.length === 0) {
       logger.success('\n✅ All files are up to date!');
@@ -61,13 +62,13 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
 
     if (options.all) {
       logger.info('Updating all files...\n');
-      await applyBatchUpdate(pendingUpdates, templatesDir, currentDir);
+      await applyBatchUpdate(pendingUpdates, templatesDir, currentDir, applyOptions);
       await writeManifestIfNeeded(currentDir, storedTemplate, template.name, commit, template.source, usedDownloader);
       logger.success('\n✅ All files updated successfully!');
       return;
     }
 
-    await runInteractiveUpdate(pendingUpdates, templatesDir, currentDir);
+    await runInteractiveUpdate(pendingUpdates, templatesDir, currentDir, applyOptions);
     await writeManifestIfNeeded(currentDir, storedTemplate, template.name, commit, template.source, usedDownloader);
     logger.success('\n✅ Update complete!');
   } catch (error) {

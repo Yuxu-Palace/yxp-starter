@@ -1,7 +1,3 @@
-/**
- * 提供交互式更新流程以及用户提示逻辑。
- */
-
 import process from 'node:process';
 import chalk from 'chalk';
 import prompts from 'prompts';
@@ -9,7 +5,7 @@ import { showDiff } from '../../utils/diff';
 import { formatStats, logger } from '../../utils/logger';
 import { createProgressTracker } from '../../utils/progress';
 import { applyBatchUpdate, applyUpdate } from './applier';
-import type { PendingUpdate, PromptConfig, UpdateAction, UpdateActionHandler } from './types';
+import type { ApplyUpdateOptions, PendingUpdate, PromptConfig, UpdateAction, UpdateActionHandler } from './types';
 
 /**
  * 依据更新类型生成提示内容。
@@ -48,8 +44,8 @@ const PROMPT_CONFIGS: Record<string, PromptConfig> = {
  * 用户动作对应的处理方法。
  */
 const ACTION_HANDLERS: Record<UpdateAction, UpdateActionHandler> = {
-  update: async ({ pending, templatesDir, currentDir }) => {
-    await applyUpdate(pending, templatesDir, currentDir);
+  update: async ({ pending, templatesDir, currentDir, applyOptions }) => {
+    await applyUpdate(pending, templatesDir, currentDir, applyOptions);
     logger.plain();
     return 'continue';
   },
@@ -58,10 +54,10 @@ const ACTION_HANDLERS: Record<UpdateAction, UpdateActionHandler> = {
     logger.plain();
     return 'continue';
   },
-  'update-all': async ({ pending, remaining, templatesDir, currentDir }) => {
-    await applyUpdate(pending, templatesDir, currentDir);
+  'update-all': async ({ pending, remaining, templatesDir, currentDir, applyOptions }) => {
+    await applyUpdate(pending, templatesDir, currentDir, applyOptions);
     logger.plain();
-    await applyBatchUpdate(remaining, templatesDir, currentDir);
+    await applyBatchUpdate(remaining, templatesDir, currentDir, applyOptions);
     return 'break';
   },
   'skip-all': async ({ pending }) => {
@@ -79,10 +75,11 @@ export async function runInteractiveUpdate(
   updates: PendingUpdate[],
   templatesDir: string,
   currentDir: string,
+  applyOptions: ApplyUpdateOptions,
 ): Promise<void> {
   const progress = createProgressTracker(updates.length);
 
-  for (let index = 0; index < updates.length; index += 1) {
+  for (let index = 0; index < updates.length; ++index) {
     const pending = updates[index];
 
     if (index === 0) {
@@ -94,7 +91,7 @@ export async function runInteractiveUpdate(
     const action = await promptUpdateAction(pending, progress);
     const remaining = updates.slice(index + 1);
     const handler = ACTION_HANDLERS[action];
-    const outcome = await handler({ pending, remaining, templatesDir, currentDir });
+    const outcome = await handler({ pending, remaining, templatesDir, currentDir, applyOptions });
 
     if (outcome === 'break') {
       break;

@@ -22,7 +22,7 @@ yxp-starter 是 yuxu-palace 官方提供的脚手架与更新 CLI，内置多种
 - 交互式 `init` 命令允许在 `templates/yxp-lib-start`、`templates/yxp-app-start` 等模板间切换，只复制必要文件并自动跳过 `node_modules`、`.pnpm`、`dist` 等目录。
 - 智能占位符与元数据处理会更新 README 中的 `{{projectName}}`，保留 `package.json` 的 `name` 字段，并在项目根记录 `.yxp-template`。
 - `update` 命令根据模板与项目差异生成彩色 diff（含二进制检测）、支持 `--all` 全量更新与 `--skip-all` 干跑模式。
-- 通过 `.yxpignore` 提供 Gitignore 风格的排除规则，同时内置忽略列表保证本地文件不会被覆盖。
+- 通过 `.yxpignore` 或 `yxp.config.js`（`update.ignore` / `update.include`）提供 Gitignore 风格的排除/包含规则，并与内置忽略列表合并，避免误改本地文件。
 - 工具函数统一了 JSON 写入、文件读写、日志输出、进度展示和模板记录的行为，确保命令执行一致。
 
 ## 架构说明
@@ -76,6 +76,62 @@ pnpm dlx yxp-start update --skip-all
 ```
 
 更新流程会遵循 `.yxpignore`、自动跳过 `README.md` 等动态文件，并在批量操作时展示实时进度。
+
+### 忽略规则配置
+
+- **默认行为**：`yxp-start update` 会自动忽略 `node_modules`、`dist`、`.turbo` 等常见构建产物，保持模板同步的纯净性。
+- **`.yxpignore`**：在项目根新增 Gitignore 风格的规则即可扩展或用 `!pattern` 重新包含路径。
+- **`yxp.config.js`**：若更偏好显式配置，可在项目根创建 JS 配置文件。`ignore` / `include` 都支持 glob，并会与默认规则及 `.yxpignore` 合并：
+
+```js
+// yxp.config.js
+export default {
+  update: {
+    ignore: ['src/**', 'tests/**'],
+    include: ['src/config.ts'],
+  },
+};
+```
+
+`include` 中的条目具有最高优先级，可确保即便父目录被忽略，仍能同步特定文件。
+
+### JSON 字段保留
+
+- 默认情况下，`yxp-start update` 会保留 `package.json` 的 `name` 字段。
+- 通过 `update.jsonFiles` 可对任意 JSON 文件（使用项目根的相对路径、POSIX 风格 `/`）声明要保留的字段。只有当目标文件中存在这些字段时才会写回，避免意外覆盖。
+
+```js
+// yxp.config.js
+export default {
+  update: {
+    jsonFiles: {
+      'package.json': { preserve: ['name', 'version', 'publishConfig'] },
+      'src/config/app.json': { preserve: ['featureFlags', 'releaseChannel'] },
+    },
+  },
+};
+```
+
+### 完整的 `yxp.config.js` 示例
+
+以下示例展示了所有可用选项的组合，可按需删减：
+
+```js
+// yxp.config.js
+export default {
+  update: {
+    ignore: ['docs/**', 'scripts/**'],      // 额外需要跳过的路径
+    include: ['scripts/release.js'],        // 即便被忽略也强制包含
+    skipDynamic: ['README.md'],             // 扩展动态文件跳过列表（可选）
+    jsonFiles: {
+      'package.json': { preserve: ['name', 'version', 'publishConfig'] },
+      'src/config/app.json': { preserve: ['featureFlags'] },
+    },
+  },
+};
+```
+
+`update` 内所有字段都是可选项，省略后会回退到 CLI 的内置默认行为。
 
 ## 示例
 - **构建库脚手架**：使用 `pnpm dlx yxp-start init my-lib --template yxp-lib-start` 快速生成包含 Rslib、Vitest、Biome 的库项目。
