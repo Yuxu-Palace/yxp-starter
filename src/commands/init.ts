@@ -6,7 +6,7 @@ import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants';
 import { copyDirectory, fileExists } from '../utils/fs';
 import { readJsonFile, writeJsonFile } from '../utils/json';
 import { logger } from '../utils/logger';
-import { applyPackageNameField } from '../utils/package-json';
+import { preservePackageFields } from '../utils/package-json';
 import { ensureTemplateReady, selectDownloader } from '../utils/template-fetch';
 import {
   buildStoredTemplateManifest,
@@ -78,7 +78,7 @@ export async function init(rawProjectName: string | undefined, options: InitComm
     await applyTemplatePlaceholders(targetDir, projectName);
 
     logger.info('\n📝 Customizing package.json...');
-    await customizePackageJson(targetDir, projectName);
+    await customizePackageJson(targetDir, projectName, template);
     logger.success('✓ Customized package.json');
 
     const manifest = buildStoredTemplateManifest({
@@ -153,6 +153,24 @@ type TemplatePackageJson = {
   [key: string]: unknown;
 };
 
+const DEFAULT_PACKAGE_FIELDS_TO_PRESERVE = ['name'] as const;
+
+function resolvePackageFieldsToPreserve(template: TemplateOption): string[] {
+  const configured = template.packageFieldsToPreserve ?? [];
+  if (configured.length === 0) {
+    return [...DEFAULT_PACKAGE_FIELDS_TO_PRESERVE];
+  }
+
+  const deduped = new Set<string>(DEFAULT_PACKAGE_FIELDS_TO_PRESERVE);
+  for (let index = 0; index < configured.length; ++index) {
+    const field = configured[index];
+    if (typeof field === 'string' && field.length > 0) {
+      deduped.add(field);
+    }
+  }
+  return Array.from(deduped);
+}
+
 /**
  * 替换模板文件中的占位符（例如 README 内的 {{projectName}}）。
  */
@@ -179,7 +197,7 @@ async function applyTemplatePlaceholders(targetDir: string, projectName: string)
 /**
  * 更新 package.json，写入项目名。
  */
-async function customizePackageJson(targetDir: string, projectName: string): Promise<void> {
+async function customizePackageJson(targetDir: string, projectName: string, template: TemplateOption): Promise<void> {
   const packagePath = path.join(targetDir, 'package.json');
   if (!(await fileExists(packagePath))) {
     logger.warn('⚠️  package.json not found in template, skipping customization.');
@@ -188,7 +206,11 @@ async function customizePackageJson(targetDir: string, projectName: string): Pro
 
   const packageObj = await readJsonFile<TemplatePackageJson>(packagePath);
 
-  const packageJson = applyPackageNameField(packageObj, projectName);
+  const fieldsToPreserve = resolvePackageFieldsToPreserve(template);
+  const enforcedFields: Record<string, unknown> = {
+    name: projectName,
+  };
+  const packageJson = preservePackageFields(packageObj, enforcedFields, fieldsToPreserve);
 
   await writeJsonFile(packagePath, packageJson);
 }

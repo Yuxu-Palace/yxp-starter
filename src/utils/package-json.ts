@@ -2,21 +2,37 @@ import { promises as fs } from 'node:fs';
 import { fileExists } from './fs';
 import { formatJson } from './json';
 
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
-}
-
 /**
- * 在 package.json 对象上设置 name 字段，供初始化流程复用。
+ * 保留指定的 package.json 字段，返回新的对象副本。
  */
-export function applyPackageNameField<T extends Record<string, unknown>>(packageObject: T, enforcedName?: string): T {
-  if (!isNonEmptyString(enforcedName)) {
-    return packageObject;
+export function preservePackageFields<T extends Record<string, unknown>>(
+  sourceObject: T,
+  targetObject: Record<string, unknown> | undefined,
+  fieldsToPreserve: readonly string[],
+): T {
+  if (!Array.isArray(fieldsToPreserve) || fieldsToPreserve.length === 0 || !targetObject) {
+    return sourceObject;
+  }
+
+  const preservedEntries: Record<string, unknown> = {};
+  for (let index = 0; index < fieldsToPreserve.length; ++index) {
+    const field = fieldsToPreserve[index];
+    if (typeof field !== 'string' || field.length === 0) {
+      continue;
+    }
+
+    if (Object.hasOwn(targetObject, field)) {
+      preservedEntries[field] = targetObject[field];
+    }
+  }
+
+  if (Object.keys(preservedEntries).length === 0) {
+    return sourceObject;
   }
 
   return {
-    ...packageObject,
-    name: enforcedName,
+    ...sourceObject,
+    ...preservedEntries,
   } as T;
 }
 

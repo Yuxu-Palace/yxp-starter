@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { assertNever } from './assert-never';
 import { readJsonFile } from './json';
 import { getPackageRoot } from './path';
 
@@ -17,12 +16,7 @@ export interface GitTemplateSource extends BaseTemplateSource {
   depth?: number;
 }
 
-export interface LocalTemplateSource extends BaseTemplateSource {
-  type: 'local';
-  path: string;
-}
-
-export type TemplateSource = GitTemplateSource | LocalTemplateSource;
+export type TemplateSource = GitTemplateSource;
 
 export interface TemplateDefinition {
   name: string;
@@ -30,6 +24,7 @@ export interface TemplateDefinition {
   description?: string;
   tags?: string[];
   source: TemplateSource;
+  packageFieldsToPreserve?: string[];
 }
 
 export interface TemplateCatalog {
@@ -74,47 +69,98 @@ export async function findTemplateDefinition(name: string): Promise<TemplateDefi
 /**
  * 校验模板配置结构与字段有效性。
  */
+function normalizePreserveFieldList(templateName: string, value: unknown): string[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new Error(`Template "${templateName}" must declare "packageFieldsToPreserve" as an array of strings.`);
+  }
+
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  for (let index = 0; index < value.length; ++index) {
+    const entry = value[index];
+    if (typeof entry !== 'string') {
+      throw new Error(`Template "${templateName}" has a non-string entry at packageFieldsToPreserve[${index}].`);
+    }
+
+    const trimmed = entry.trim();
+    if (trimmed.length === 0 || seen.has(trimmed)) {
+      continue;
+    }
+
+    normalized.push(trimmed);
+    seen.add(trimmed);
+  }
+
+  return normalized;
+}
+
 function validateCatalog(catalog: TemplateCatalog, configPath: string): void {
+  const templates = ensureTemplateArray(catalog, configPath);
+  templates.forEach((template, index) => {
+    validateTemplateEntry(template, index, configPath);
+  });
+}
+
+function ensureTemplateArray(catalog: TemplateCatalog, configPath: string): TemplateDefinition[] {
   if (!(catalog && Array.isArray(catalog.templates))) {
     throw new Error(`Invalid template catalog in ${configPath}: missing "templates" array.`);
   }
 
-  for (let index = 0; index < catalog.templates.length; ++index) {
-    const template = catalog.templates[index];
-    if (!template || typeof template !== 'object') {
-      throw new Error(`Invalid template definition at index ${index} in ${configPath}.`);
-    }
-    if (!template.name || typeof template.name !== 'string') {
-      throw new Error(`Template at index ${index} is missing a valid "name" field.`);
-    }
-    if (!template.displayName || typeof template.displayName !== 'string') {
-      throw new Error(`Template "${template.name}" is missing a valid "displayName" field.`);
-    }
-    if (!template.source || typeof template.source !== 'object') {
-      throw new Error(`Template "${template.name}" is missing a "source" configuration.`);
-    }
-    validateSource(template.name, template.source as TemplateSource);
+  return catalog.templates;
+}
+
+function validateTemplateEntry(template: TemplateDefinition | undefined, index: number, configPath: string): void {
+  assertTemplateObject(template, index, configPath);
+
+  const name = ensureStringField(template.name, `Template at index ${index} is missing a valid "name" field.`);
+  ensureStringField(template.displayName, `Template "${name}" is missing a valid "displayName" field.`);
+  const source = ensureSourceDefinition(template.source, name);
+
+  validateSource(name, source);
+  applyPreserveFieldNormalization(template, name);
+}
+
+function assertTemplateObject(
+  template: TemplateDefinition | undefined,
+  index: number,
+  configPath: string,
+): asserts template is TemplateDefinition {
+  if (!(template && typeof template === 'object')) {
+    throw new Error(`Invalid template definition at index ${index} in ${configPath}.`);
   }
+}
+
+function ensureStringField(value: unknown, errorMessage: string): string {
+  if (!value || typeof value !== 'string') {
+    throw new Error(errorMessage);
+  }
+
+  return value;
+}
+
+function ensureSourceDefinition(source: TemplateSource | undefined, templateName: string): TemplateSource {
+  if (!source || typeof source !== 'object') {
+    throw new Error(`Template "${templateName}" is missing a "source" configuration.`);
+  }
+
+  return source;
+}
+
+function applyPreserveFieldNormalization(template: TemplateDefinition, templateName: string): void {
+  const preserveFields = normalizePreserveFieldList(templateName, template.packageFieldsToPreserve);
+  template.packageFieldsToPreserve = preserveFields.length > 0 ? preserveFields : undefined;
 }
 
 /**
  * 针对不同来源类型校验必要字段。
  */
 function validateSource(templateName: string, source: TemplateSource): void {
-  const sourceType = source.type;
-
-  switch (sourceType) {
-    case 'git':
-      if (!('url' in source) || typeof source.url !== 'string') {
-        throw new Error(`Template "${templateName}" must specify a git "url".`);
-      }
-      break;
-    case 'local':
-      if (!('path' in source) || typeof source.path !== 'string') {
-        throw new Error(`Template "${templateName}" must specify a local "path".`);
-      }
-      break;
-    default:
-      assertNever(source, `Template "${templateName}" has unsupported source type "${String(sourceType)}".`);
+  if (!('url' in source) || typeof source.url !== 'string') {
+    throw new Error(`Template "${templateName}" must specify a git "url".`);
   }
 }

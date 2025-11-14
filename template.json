@@ -5,6 +5,7 @@
       "name": "yxp-lib-start",
       "displayName": "YXP Library Starter",
       "description": "Library starter project hosted remotely.",
+      "packageFieldsToPreserve": ["name"],
       "source": {
         "type": "git",
         "url": "https://github.com/Yuxu-Palace/yxp-template",

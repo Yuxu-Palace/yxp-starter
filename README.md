@@ -19,18 +19,19 @@ yxp-starter is the official scaffolding and update CLI for the yuxu-palace ecosy
 - [License](#license)
 
 ## Features
-- Interactive template selection through the `init` command, copying only the files that matter while skipping `node_modules`, `.pnpm`, `dist`, and other boilerplate directories.
-- Smart placeholder and metadata handling keeps generated READMEs up to date, preserves the project `package.json` name, and records the chosen template in `.yxp-template`.
+- Interactive template selection through the `init` command, using the remote catalog declared in `template.json` to download templates before copying only the files that matter while skipping `node_modules`, `.pnpm`, `dist`, and other boilerplate directories.
+- Smart placeholder and metadata handling keeps generated READMEs up to date, preserves the configured `package.json` fields (defaults to `name`), and records the chosen template in `.yxp-template`.
 - Diff-driven updates compare template and project files, preview colourised diffs (with binary detection), and support unattended runs via `--all` or dry runs via `--skip-all`.
 - Gitignore-style exclusions through `.yxpignore` or `yxp.config.js` (with `update.ignore` / `update.include`) plus built-in skip lists prevent local-only files from being touched.
-- Utility helpers standardise JSON formatting, file I/O, logging, progress indicators, and template selection for consistent behaviour across commands.
+- Utility helpers standardise JSON formatting, file I/O, logging, progress indicators, template catalog loading, and downloader orchestration for consistent behaviour across commands.
 
 ## Architecture
+- `template.json` enumerates all available templates and their remote Git sources, which are cached under `~/.yxp-starter/templates` once downloaded.
 - `src/index.ts` wires the CLI entry point with Commander, registering the `init` and `update` commands.
 - `src/commands/init.ts` orchestrates new project creation, including template discovery, interactive selection, file copying, placeholder replacement, and package metadata updates.
 - `src/commands/update.ts` drives synchronisation by scanning differences, honouring ignore rules, and delegating to interactive or batch update flows.
 - `src/core/update/` contains the diff engine: `scanner.ts` enumerates files, `differ.ts` builds pending updates, `handlers.ts` classifies file actions, and `applier.ts` writes or deletes files with a progress footer from `progress.ts`.
-- `src/utils/` provides shared services such as binary-safe file access (`fs.ts`), diff/summary rendering, JSON formatting, template manifests, ignore parsing, and colourised logging.
+- `src/utils/` provides shared services such as binary-safe file access (`fs.ts`), diff/summary rendering, JSON formatting, template manifests, the template catalog loader, downloader orchestration, ignore parsing, and colourised logging.
 - `src/types/` ships ambient type declarations (e.g. `cli-progress-footer`) used by the CLI runtime.
 
 ## Installation
@@ -58,7 +59,7 @@ pnpm dlx yxp-start init my-project
 pnpm dlx yxp-start init my-project --template yxp-lib-start
 ```
 
-The command creates the target directory, copies template contents, replaces `{{projectName}}` placeholders, and preserves the package name field.
+The command creates the target directory, copies template contents, replaces `{{projectName}}` placeholders, and preserves the template-configured `package.json` fields (at minimum `name`).
 
 ### `update`
 
@@ -76,6 +77,29 @@ pnpm dlx yxp-start update --skip-all
 ```
 
 The updater respects `.yxpignore`, skips dynamic files such as `README.md`, and shows a live progress footer while applying batches.
+
+### Template catalog
+
+All templates are defined in `template.json`. Each entry points to a remote Git repository (and optional sub-path/ref) that the CLI downloads through the active downloader plugin (defaults to `@cmtlyt/git-down`). Example:
+
+```json
+{
+  "templates": [
+    {
+      "name": "yxp-lib-start",
+      "displayName": "YXP Library Starter",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/Yuxu-Palace/yxp-template",
+        "ref": "feat/yxp-lib-start",
+        "path": "start/yxp-lib-start"
+      }
+    }
+  ]
+}
+```
+
+Local filesystem sources are no longer supported—the CLI always pulls templates from the declared remote and caches them beneath `~/.yxp-starter/templates` for reuse.
 
 ### Ignore configuration
 

@@ -5,11 +5,10 @@ import prompts from 'prompts';
 import { ensureDefaultDownloadPluginsRegistered } from '../plugins/defaults';
 import { getDefaultDownloadPlugin, getDownloadPlugin, listDownloadPlugins } from '../plugins/registry';
 import type { DownloadContext, TemplateDownloadPlugin } from '../plugins/types';
-import { assertNever } from './assert-never';
 import { copyDirectory, fileExists } from './fs';
 import { logger } from './logger';
-import { getPackageRoot, getTemplateCacheRoot } from './path';
-import type { GitTemplateSource, LocalTemplateSource, TemplateDefinition } from './template-config';
+import { getTemplateCacheRoot } from './path';
+import type { GitTemplateSource, TemplateDefinition } from './template-config';
 
 interface FetchResult {
   path: string;
@@ -61,20 +60,10 @@ export async function selectDownloader(preferred?: string): Promise<string | und
 }
 
 /**
- * 确保模板在本地已准备就绪：对于 git 模板走缓存逻辑，local 模板直接返回路径。
+ * 确保模板在本地已准备就绪，目前仅支持 git 模板的缓存逻辑。
  */
 export async function ensureTemplateReady(template: TemplateDefinition, downloaderName?: string): Promise<FetchResult> {
-  const { source } = template;
-  const sourceType = source.type;
-
-  switch (sourceType) {
-    case 'git':
-      return fetchGitTemplate(template, source, downloaderName);
-    case 'local':
-      return resolveLocalTemplate(source);
-    default:
-      return assertNever(source, `Unsupported template source type: ${String(sourceType)}`);
-  }
+  return fetchGitTemplate(template, template.source, downloaderName);
 }
 
 /**
@@ -114,20 +103,6 @@ async function fetchGitTemplate(
   await cleanupTemp(tempRoot);
 
   return { path: cachePath, commit: result.commit, downloader: plugin.name };
-}
-
-/**
- * 解析本地模板路径，返回固定的下载结果结构。
- */
-async function resolveLocalTemplate(source: LocalTemplateSource): Promise<FetchResult> {
-  const baseDir = getPackageRoot();
-  const resolved = path.isAbsolute(source.path) ? source.path : path.join(baseDir, source.path);
-  const exists = await fileExists(resolved);
-  if (!exists) {
-    throw new Error(`Local template path ${resolved} does not exist.`);
-  }
-
-  return { path: resolved, commit: 'local', downloader: 'local' };
 }
 
 /**
