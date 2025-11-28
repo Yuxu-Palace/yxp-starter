@@ -33,9 +33,11 @@ export function getDownloadPlugin(name: string): TemplateDownloadPlugin | undefi
 }
 
 /**
- * 获取默认插件（即注册顺序中的第一个）。
+ * 获取注册列表中的第一个插件。
+ *
+ * 通常第一个注册的插件会被用作默认选项。
  */
-export function getDefaultDownloadPlugin(): TemplateDownloadPlugin | undefined {
+export function getFirstDownloadPlugin(): TemplateDownloadPlugin | undefined {
   return pluginList[0];
 }
 

@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import prompts from 'prompts';
 import { ensureDefaultDownloadPluginsRegistered } from '../plugins/defaults';
-import { getDefaultDownloadPlugin, getDownloadPlugin, listDownloadPlugins } from '../plugins/registry';
+import { getDownloadPlugin, getFirstDownloadPlugin, listDownloadPlugins } from '../plugins/registry';
 import type { DownloadContext, TemplateDownloadPlugin } from '../plugins/types';
 import { copyDirectory, fileExists } from './fs';
 import { logger } from './logger';
@@ -137,7 +137,7 @@ async function resolveDownloadPlugin(downloaderName?: string): Promise<TemplateD
 
   const selection = await selectDownloader();
   if (!selection) {
-    const plugin = getDefaultDownloadPlugin();
+    const plugin = getFirstDownloadPlugin();
     if (!plugin) {
       throw new Error('No download plugins available.');
     }

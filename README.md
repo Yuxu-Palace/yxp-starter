@@ -20,8 +20,8 @@ yxp-starter is the official scaffolding and update CLI for the yuxu-palace ecosy
 
 ## Features
 - Interactive template selection through the `init` command, using the remote catalog declared in `template.json` to download templates before copying only the files that matter while skipping `node_modules`, `.pnpm`, `dist`, and other boilerplate directories.
-- Smart placeholder and metadata handling keeps generated READMEs up to date, preserves the configured `package.json` fields (defaults to `name`), and records the chosen template in `.yxp-template`.
-- Diff-driven updates compare template and project files, preview colourised diffs (with binary detection), and support unattended runs via `--all` or dry runs via `--skip-all`.
+- Smart placeholder and metadata handling keeps generated READMEs up to date, preserves the configured `package.json` fields (defaults to `name`), and records the chosen template in `.yxp-template.json` (including template info and initialization time).
+- Diff-driven updates compare template and project files, preview colourised diffs (with binary detection), support unattended runs via `--all` or dry runs via `--skip-all`, and record update timestamps.
 - Gitignore-style exclusions through `.yxpignore` or `yxp.config.js` (with `update.ignore` / `update.include`) plus built-in skip lists prevent local-only files from being touched.
 - Utility helpers standardise JSON formatting, file I/O, logging, progress indicators, template catalog loading, and downloader orchestration for consistent behaviour across commands.
 

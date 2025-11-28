@@ -115,7 +115,7 @@ async function resolveProjectName(inputName?: string): Promise<string> {
       name: 'projectName',
       message: 'Project name',
       initial: 'my-project',
-      validate: (value: string) => (value.trim().length > 0 ? true : 'Please enter a project name.'),
+      validate: (value: string) => value.trim().length > 0 || 'Please enter a project name.',
     },
     {
       onCancel: () => {

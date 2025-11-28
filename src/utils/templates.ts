@@ -5,13 +5,14 @@ import { fileExists } from './fs';
 import { readJsonFile, writeJsonFile } from './json';
 import {
   findTemplateDefinition,
+  formatSyncTime,
   listTemplateDefinitions,
   type TemplateDefinition,
   type TemplateSource,
 } from './template-config';
 
 /** 模板记录文件名。 */
-const TEMPLATE_MANIFEST = '.yxp-template';
+const TEMPLATE_MANIFEST = '.yxp-template.json';
 
 export type TemplateOption = TemplateDefinition;
 
@@ -20,6 +21,7 @@ export interface StoredTemplateManifest {
   commit: string;
   source: TemplateSource;
   appliedAt: string;
+  updatedAt?: string;
   downloader?: string;
 }
 
@@ -29,6 +31,7 @@ interface BuildManifestOptions {
   source: TemplateSource;
   downloader: string;
   appliedAt?: string;
+  updatedAt?: string;
 }
 
 /**
@@ -109,7 +112,7 @@ export async function readStoredTemplate(projectDir: string): Promise<StoredTemp
       name: legacyName,
       commit: 'legacy',
       source: definition.source,
-      appliedAt: new Date(0).toISOString(),
+      appliedAt: '1970年01月01日 08:00:00',
     } as StoredTemplateManifest;
   }
 }
@@ -123,16 +126,17 @@ export async function writeStoredTemplate(projectDir: string, manifest: StoredTe
 }
 
 /**
- * 构造标准化的模板清单，附带当前时间戳。
+ * 构造标准化的模板清单，使用可读的时间格式。
  */
 export function buildStoredTemplateManifest(options: BuildManifestOptions): StoredTemplateManifest {
-  const { name, commit, source, downloader, appliedAt } = options;
+  const { name, commit, source, downloader, appliedAt, updatedAt } = options;
   return {
     name,
     commit,
     source,
     downloader,
-    appliedAt: appliedAt ?? new Date().toISOString(),
+    appliedAt: appliedAt ?? formatSyncTime(),
+    updatedAt,
   };
 }
 

@@ -20,8 +20,8 @@ yxp-starter 是 yuxu-palace 官方提供的脚手架与更新 CLI，内置多种
 
 ## 功能亮点
 - 交互式 `init` 命令通过 `template.json` 中声明的远程模板目录拉取最新模板，只复制必要文件并自动跳过 `node_modules`、`.pnpm`、`dist` 等目录。
-- 智能占位符与元数据处理会更新 README 中的 `{{projectName}}`，按模板配置保留 `package.json` 中指定的字段（默认至少包含 `name`），并在项目根记录 `.yxp-template`。
-- `update` 命令根据模板与项目差异生成彩色 diff（含二进制检测）、支持 `--all` 全量更新与 `--skip-all` 干跑模式。
+- 智能占位符与元数据处理会更新 README 中的 `{{projectName}}`，按模板配置保留 `package.json` 中指定的字段（默认至少包含 `name`），并在项目根记录 `.yxp-template.json`（包含模板信息和初始化时间）。
+- `update` 命令根据模板与项目差异生成彩色 diff（含二进制检测）、支持 `--all` 全量更新与 `--skip-all` 干跑模式，并记录更新时间。
 - 通过 `.yxpignore` 或 `yxp.config.js`（`update.ignore` / `update.include`）提供 Gitignore 风格的排除/包含规则，并与内置忽略列表合并，避免误改本地文件。
 - 工具函数统一了 JSON 写入、文件读写、日志输出、进度展示、模板目录加载与下载器编排的行为，确保命令执行一致。
 
@@ -29,8 +29,8 @@ yxp-starter 是 yuxu-palace 官方提供的脚手架与更新 CLI，内置多种
 - `template.json` 枚举所有可用模板及其远程 Git 仓库信息，下载后会缓存在 `~/.yxp-starter/templates`，供后续命令复用。
 - `src/index.ts` 使用 Commander 注册 CLI 入口，并暴露 `init`、`update` 两个命令。
 - `src/commands/init.ts` 负责项目初始化：模板发现、交互式选择、文件复制、占位符替换以及 `package.json` 增量更新。
-- `src/commands/update.ts` 主导同步流程：读取 `.yxp-template`、解析忽略规则、扫描差异并支持交互式或批量更新模式。
-- `src/core/update/` 提供差异引擎：`scanner.ts` 枚举文件、`differ.ts` 生成待处理项目、`handlers.ts` 判定增删改策略、`applier.ts` 写入文件并结合 `progress.ts` 展示进度。
+- `src/commands/update.ts` 主导同步流程：读取 `.yxp-template.json`、解析忽略规则、扫描差异并支持交互式或批量更新模式。
+- `src/core/update/` 提供差异引擎：`scanner.ts` 枚举文件、`differ.ts` 生成待处理项目、`handlers.ts` 判定增删改��略、`applier.ts` 写入文件并结合 `progress.ts` 展示进度。
 - `src/utils/` 封装常用能力，包括二进制安全文件读取（`fs.ts`）、差异展示与摘要、JSON 格式化、模板记录、模板目录加载、下载器编排、忽略解析以及彩色日志。
 - `src/types/` 提供第三方依赖的类型声明（如 `cli-progress-footer`），提升 TypeScript 开发体验。
 

@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import { getDiffStats } from '../../utils/diff';
 import { fileExists, readFileContent } from '../../utils/fs';
 import { logDiffResult } from '../../utils/logger';
-import { applyPreservedJsonFields, extractFieldsFromJsonContent } from '../../utils/package-json';
+import { applyPreservedJsonFields, pickFields } from '../../utils/package-json';
 import { toPosixPath } from '../../utils/path';
 import { SKIPPED_DYNAMIC_FILES } from './constants';
 import type { DiffSummary, FileUpdate, PendingUpdate, TemplateUpdateHandler } from './types';
@@ -54,7 +54,9 @@ export async function buildJsonFileUpdates(
     fs.readFile(sourcePath, 'utf-8'),
     fs.readFile(targetPath, 'utf-8'),
   ]);
-  const preservedFields = extractFieldsFromJsonContent(targetRaw, fieldsToPreserve);
+
+  const targetParsed = JSON.parse(targetRaw) as Record<string, unknown>;
+  const preservedFields = pickFields(targetParsed, fieldsToPreserve);
   const sanitizedSource = applyPreservedJsonFields(sourceRaw, preservedFields);
   const sanitizedTarget = applyPreservedJsonFields(targetRaw, preservedFields);
 

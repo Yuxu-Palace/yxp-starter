@@ -6,6 +6,7 @@ import type { UpdateOptions } from '../core/update/types';
 import { createIgnoreMatcher } from '../utils/ignore';
 import { logger } from '../utils/logger';
 import { showUpdateSummary } from '../utils/summary';
+import { formatSyncTime } from '../utils/template-config';
 import { ensureTemplateReady, selectDownloader } from '../utils/template-fetch';
 import {
   buildStoredTemplateManifest,
@@ -96,7 +97,7 @@ async function resolveTemplateSelection(stored: StoredTemplateManifest | null) {
 }
 
 /**
- * 根据更新结果记录最新的模板元数据，避免重复写入。
+ * 根据更新结果记录最新的模板元数据，保留初始化时间并记录更新时间。
  */
 async function writeManifestIfNeeded(
   projectDir: string,
@@ -111,6 +112,8 @@ async function writeManifestIfNeeded(
     commit,
     source,
     downloader,
+    appliedAt: stored?.appliedAt,
+    updatedAt: formatSyncTime(),
   });
 
   if (

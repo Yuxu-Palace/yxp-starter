@@ -1,6 +1,21 @@
-import { promises as fs } from 'node:fs';
 import { fileExists } from './fs';
-import { formatJson } from './json';
+import { formatJson, readJsonFile } from './json';
+
+/**
+ * 从对象中挑选指定的键，返回新对象。
+ */
+export function pickFields<T extends Record<string, unknown>>(
+  obj: T,
+  keys: readonly string[],
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const key of keys) {
+    if (Object.hasOwn(obj, key)) {
+      result[key] = obj[key];
+    }
+  }
+  return result;
+}
 
 /**
  * 保留指定的 package.json 字段，返回新的对象副本。
@@ -14,17 +29,7 @@ export function preservePackageFields<T extends Record<string, unknown>>(
     return sourceObject;
   }
 
-  const preservedEntries: Record<string, unknown> = {};
-  for (let index = 0; index < fieldsToPreserve.length; ++index) {
-    const field = fieldsToPreserve[index];
-    if (typeof field !== 'string' || field.length === 0) {
-      continue;
-    }
-
-    if (Object.hasOwn(targetObject, field)) {
-      preservedEntries[field] = targetObject[field];
-    }
-  }
+  const preservedEntries = pickFields(targetObject, fieldsToPreserve);
 
   if (Object.keys(preservedEntries).length === 0) {
     return sourceObject;
@@ -54,7 +59,7 @@ export function applyPreservedJsonFields(content: string, preservedFields?: Reco
 }
 
 /**
- * 解析 JSON 内容中的指定字段。
+ * 读取 JSON 文件并提取指定字段。
  */
 export async function readJsonFileFields(targetPath: string, fields: string[]): Promise<Record<string, unknown>> {
   if (!(await fileExists(targetPath))) {
@@ -62,23 +67,8 @@ export async function readJsonFileFields(targetPath: string, fields: string[]): 
   }
 
   try {
-    const targetRaw = await fs.readFile(targetPath, 'utf-8');
-    return extractFieldsFromJsonContent(targetRaw, fields);
-  } catch {
-    return {};
-  }
-}
-
-export function extractFieldsFromJsonContent(content: string, fields: string[]): Record<string, unknown> {
-  try {
-    const parsed = JSON.parse(content) as Record<string, unknown>;
-    const result: Record<string, unknown> = {};
-    for (const field of fields) {
-      if (Object.hasOwn(parsed, field)) {
-        result[field] = parsed[field];
-      }
-    }
-    return result;
+    const parsed = await readJsonFile<Record<string, unknown>>(targetPath);
+    return pickFields(parsed, fields);
   } catch {
     return {};
   }

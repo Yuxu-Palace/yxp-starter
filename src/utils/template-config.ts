@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { readJsonFile } from './json';
+import { readJsonFile, writeJsonFile } from './json';
 import { getPackageRoot } from './path';
 
 const TEMPLATE_CONFIG_FILE = 'template.json';
@@ -30,6 +30,7 @@ export interface TemplateDefinition {
 export interface TemplateCatalog {
   version?: number;
   templates: TemplateDefinition[];
+  lastSyncTime?: string;
 }
 
 let cachedCatalog: TemplateCatalog | null = null;
@@ -163,4 +164,42 @@ function validateSource(templateName: string, source: TemplateSource): void {
   if (!('url' in source) || typeof source.url !== 'string') {
     throw new Error(`Template "${templateName}" must specify a git "url".`);
   }
+}
+
+/**
+ * 格式化当前时间为可读格式：年月日 时:分:秒
+ * 例如：2025年11月28日 15:30:45
+ */
+export function formatSyncTime(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
+}
+
+/**
+ * 更新模板配置文件中的同步时间。
+ */
+export async function updateTemplateSyncTime(): Promise<void> {
+  const configPath = path.join(getPackageRoot(), TEMPLATE_CONFIG_FILE);
+  const catalog = await readJsonFile<TemplateCatalog>(configPath);
+
+  catalog.lastSyncTime = formatSyncTime();
+
+  await writeJsonFile(configPath, catalog);
+
+  // 清除缓存，确保下次读取时获取最新数据
+  cachedCatalog = null;
+}
+
+/**
+ * 获取最后一次同步时间，如果没有则返回 undefined。
+ */
+export async function getLastSyncTime(): Promise<string | undefined> {
+  const catalog = await loadTemplateCatalog();
+  return catalog.lastSyncTime;
 }

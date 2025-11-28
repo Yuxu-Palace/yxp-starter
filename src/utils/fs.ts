@@ -1,5 +1,4 @@
 import { promises as fs } from 'node:fs';
-import path from 'node:path';
 
 // 二进制检测时采样的最大字节数，用于兼顾准确度与性能。
 const BINARY_SAMPLE_SIZE = 4096;
@@ -53,23 +52,13 @@ export async function readFileContent(filePath: string): Promise<FileReadResult>
 }
 
 /**
- * 递归复制目录，保持原有结构。
+ * 递归复制目录
  */
 export async function copyDirectory(src: string, dest: string): Promise<void> {
-  await fs.mkdir(dest, { recursive: true });
-  const entries = await fs.readdir(src, { withFileTypes: true });
-
-  for (let index = 0; index < entries.length; ++index) {
-    const entry = entries[index];
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-
-    if (entry.isDirectory()) {
-      await copyDirectory(srcPath, destPath);
-    } else {
-      await fs.copyFile(srcPath, destPath);
-    }
-  }
+  await fs.cp(src, dest, {
+    recursive: true,
+    force: true,
+  });
 }
 
 /**
