@@ -30,7 +30,7 @@ export interface TemplateDefinition {
 export interface TemplateCatalog {
   version?: number;
   templates: TemplateDefinition[];
-  lastSyncTime?: string;
+  updatedAt?: string;
 }
 
 let cachedCatalog: TemplateCatalog | null = null;
@@ -182,13 +182,13 @@ export function formatSyncTime(date: Date = new Date()): string {
 }
 
 /**
- * 更新模板配置文件中的同步时间。
+ * 更新模板配置文件中的更新时间。
  */
-export async function updateTemplateSyncTime(): Promise<void> {
+export async function updateTemplateTime(): Promise<void> {
   const configPath = path.join(getPackageRoot(), TEMPLATE_CONFIG_FILE);
   const catalog = await readJsonFile<TemplateCatalog>(configPath);
 
-  catalog.lastSyncTime = formatSyncTime();
+  catalog.updatedAt = formatSyncTime();
 
   await writeJsonFile(configPath, catalog);
 
@@ -197,9 +197,9 @@ export async function updateTemplateSyncTime(): Promise<void> {
 }
 
 /**
- * 获取最后一次同步时间，如果没有则返回 undefined。
+ * 获取最后一次更新时间，如果没有则返回 undefined。
  */
-export async function getLastSyncTime(): Promise<string | undefined> {
+export async function getLastUpdateTime(): Promise<string | undefined> {
   const catalog = await loadTemplateCatalog();
-  return catalog.lastSyncTime;
+  return catalog.updatedAt;
 }

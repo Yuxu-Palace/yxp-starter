@@ -20,8 +20,7 @@ export interface StoredTemplateManifest {
   name: string;
   commit: string;
   source: TemplateSource;
-  appliedAt: string;
-  updatedAt?: string;
+  updatedAt: string;
   downloader?: string;
 }
 
@@ -30,7 +29,6 @@ interface BuildManifestOptions {
   commit: string;
   source: TemplateSource;
   downloader: string;
-  appliedAt?: string;
   updatedAt?: string;
 }
 
@@ -112,7 +110,7 @@ export async function readStoredTemplate(projectDir: string): Promise<StoredTemp
       name: legacyName,
       commit: 'legacy',
       source: definition.source,
-      appliedAt: '1970年01月01日 08:00:00',
+      updatedAt: '1970年01月01日 08:00:00',
     } as StoredTemplateManifest;
   }
 }
@@ -129,14 +127,13 @@ export async function writeStoredTemplate(projectDir: string, manifest: StoredTe
  * 构造标准化的模板清单，使用可读的时间格式。
  */
 export function buildStoredTemplateManifest(options: BuildManifestOptions): StoredTemplateManifest {
-  const { name, commit, source, downloader, appliedAt, updatedAt } = options;
+  const { name, commit, source, downloader, updatedAt } = options;
   return {
     name,
     commit,
     source,
     downloader,
-    appliedAt: appliedAt ?? formatSyncTime(),
-    updatedAt,
+    updatedAt: updatedAt ?? formatSyncTime(),
   };
 }
 
