@@ -12,8 +12,8 @@ importers:
         specifier: ^0.3.1
         version: 0.3.1
       '@yuxu-palace/kun-mythos':
-        specifier: ^0.0.0
-        version: 0.0.0
+        specifier: https://pkg.pr.new/Yuxu-Palace/kun-mythos/@yuxu-palace/kun-mythos@26e26e7
+        version: https://pkg.pr.new/Yuxu-Palace/kun-mythos/@yuxu-palace/kun-mythos@26e26e7
       chalk:
         specifier: ^5.3.0
         version: 5.6.2
@@ -401,8 +401,9 @@ packages:
   '@types/prompts@2.4.9':
     resolution: {integrity: sha512-qTxFi6Buiu8+50/+3DGIWLHM6QuWsEKugJnnP6iv2Mc4ncxE4A/OJkjuVOA+5X0X1S/nq5VJRa8Lu+nwcvbrKA==}
 
-  '@yuxu-palace/kun-mythos@0.0.0':
-    resolution: {integrity: sha512-YzGIYWQu/Vx9Y7h75GjG00MBzuia6M+xnQqo2/EcL8WmWPyHHoMK7KDEw7OKYKukHTTSQVAQgO4omY8/u/t8gg==}
+  '@yuxu-palace/kun-mythos@https://pkg.pr.new/Yuxu-Palace/kun-mythos/@yuxu-palace/kun-mythos@26e26e7':
+    resolution: {tarball: https://pkg.pr.new/Yuxu-Palace/kun-mythos/@yuxu-palace/kun-mythos@26e26e7}
+    version: 0.2.0-alpha.0
 
   JSONStream@1.3.5:
     resolution: {integrity: sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ==}
@@ -1339,7 +1340,7 @@ snapshots:
       '@types/node': 24.3.1
       kleur: 3.0.3
 
-  '@yuxu-palace/kun-mythos@0.0.0': {}
+  '@yuxu-palace/kun-mythos@https://pkg.pr.new/Yuxu-Palace/kun-mythos/@yuxu-palace/kun-mythos@26e26e7': {}
 
   JSONStream@1.3.5:
     dependencies:

@@ -30,8 +30,8 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
     const downloader = await selectDownloader(storedTemplate?.downloader);
     const template = await resolveTemplateSelection(storedTemplate);
 
-    const { path: templatesDir, commit, downloader: usedDownloader } = await ensureTemplateReady(template, downloader);
-    logger.detail(`Using template ${template.displayName} (${template.name}) @ ${commit}`);
+    const { path: templatesDir, downloader: usedDownloader } = await ensureTemplateReady(template, downloader);
+    logger.detail(`Using template ${template.displayName} (${template.name})`);
 
     const loadedConfig = await loadYxpConfig(currentDir);
     const updateConfig = loadedConfig?.config.update;
@@ -48,7 +48,7 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
 
     if (pendingUpdates.length === 0) {
       logger.success('\n✅ All files are up to date!');
-      await writeManifestIfNeeded(currentDir, storedTemplate, template.name, commit, template.source, usedDownloader);
+      await writeManifestIfNeeded(currentDir, storedTemplate, template.name, template.source, usedDownloader);
       return;
     }
 
@@ -63,13 +63,13 @@ export async function update(options: UpdateOptions = {}): Promise<void> {
     if (options.all) {
       logger.info('Updating all files...\n');
       await applyBatchUpdate(pendingUpdates, templatesDir, currentDir, applyOptions);
-      await writeManifestIfNeeded(currentDir, storedTemplate, template.name, commit, template.source, usedDownloader);
+      await writeManifestIfNeeded(currentDir, storedTemplate, template.name, template.source, usedDownloader);
       logger.success('\n✅ All files updated successfully!');
       return;
     }
 
     await runInteractiveUpdate(pendingUpdates, templatesDir, currentDir, applyOptions);
-    await writeManifestIfNeeded(currentDir, storedTemplate, template.name, commit, template.source, usedDownloader);
+    await writeManifestIfNeeded(currentDir, storedTemplate, template.name, template.source, usedDownloader);
     logger.success('\n✅ Update complete!');
   } catch (error) {
     logger.error('\n❌ Update failed:', error);
@@ -102,23 +102,16 @@ async function writeManifestIfNeeded(
   projectDir: string,
   stored: StoredTemplateManifest | null,
   templateName: string,
-  commit: string,
   source: StoredTemplateManifest['source'],
   downloader: string,
 ): Promise<void> {
   const manifest = buildStoredTemplateManifest({
     name: templateName,
-    commit,
     source,
     downloader,
   });
 
-  if (
-    !stored ||
-    stored.name !== manifest.name ||
-    stored.commit !== manifest.commit ||
-    stored.downloader !== manifest.downloader
-  ) {
+  if (!stored || stored.name !== manifest.name || stored.downloader !== manifest.downloader) {
     await writeStoredTemplate(projectDir, manifest);
   }
 }

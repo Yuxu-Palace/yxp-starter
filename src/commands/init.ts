@@ -65,8 +65,7 @@ export async function init(rawProjectName: string | undefined, options: InitComm
     const template = await resolveTemplateSelection(options.template);
     logger.info(`\n🧩 Using template: ${template.displayName} (${template.name})\n`);
 
-    const { path: templateDir, commit, downloader: usedDownloader } = await ensureTemplateReady(template, downloader);
-    logger.detail(`Template commit: ${commit}`);
+    const { path: templateDir, downloader: usedDownloader } = await ensureTemplateReady(template, downloader);
 
     await fs.mkdir(targetDir, { recursive: true });
     logger.success(`✓ Created directory: ${projectName}`);
@@ -83,7 +82,6 @@ export async function init(rawProjectName: string | undefined, options: InitComm
 
     const manifest = buildStoredTemplateManifest({
       name: template.name,
-      commit,
       source: template.source,
       downloader: usedDownloader,
     });

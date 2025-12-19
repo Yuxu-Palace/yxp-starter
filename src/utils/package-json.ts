@@ -1,21 +1,6 @@
+import { pick } from '@yuxu-palace/kun-mythos';
 import { fileExists } from './fs';
 import { formatJson, readJsonFile } from './json';
-
-/**
- * 从对象中挑选指定的键，返回新对象。
- */
-export function pickFields<T extends Record<string, unknown>>(
-  obj: T,
-  keys: readonly string[],
-): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const key of keys) {
-    if (Object.hasOwn(obj, key)) {
-      result[key] = obj[key];
-    }
-  }
-  return result;
-}
 
 /**
  * 保留指定的 package.json 字段，返回新的对象副本。
@@ -29,7 +14,7 @@ export function preservePackageFields<T extends Record<string, unknown>>(
     return sourceObject;
   }
 
-  const preservedEntries = pickFields(targetObject, fieldsToPreserve);
+  const preservedEntries = pick(targetObject, fieldsToPreserve);
 
   if (Object.keys(preservedEntries).length === 0) {
     return sourceObject;
@@ -68,7 +53,7 @@ export async function readJsonFileFields(targetPath: string, fields: string[]): 
 
   try {
     const parsed = await readJsonFile<Record<string, unknown>>(targetPath);
-    return pickFields(parsed, fields);
+    return pick(parsed, fields);
   } catch {
     return {};
   }

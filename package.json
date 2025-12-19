@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@cmtlyt/git-down": "^0.3.1",
-    "@yuxu-palace/kun-mythos": "^0.0.0",
+    "@yuxu-palace/kun-mythos": "https://pkg.pr.new/Yuxu-Palace/kun-mythos/@yuxu-palace/kun-mythos@26e26e7",
     "chalk": "^5.3.0",
     "cli-progress-footer": "^2.3.3",
     "commander": "^12.1.0",

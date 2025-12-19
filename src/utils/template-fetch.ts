@@ -12,7 +12,6 @@ import type { GitTemplateSource, TemplateDefinition } from './template-config';
 
 interface FetchResult {
   path: string;
-  commit: string;
   downloader: string;
 }
 
@@ -102,7 +101,7 @@ async function fetchGitTemplate(
 
   await cleanupTemp(tempRoot);
 
-  return { path: cachePath, commit: result.commit, downloader: plugin.name };
+  return { path: cachePath, downloader: plugin.name };
 }
 
 /**
