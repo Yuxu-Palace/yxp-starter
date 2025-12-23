@@ -111,6 +111,8 @@ async function writeManifestIfNeeded(
     downloader,
   });
 
+  // 仅在首次更新或模板配置发生实质性变化时才写入元数据
+  // 这样可以避免不必要的 I/O 操作，同时确保记录准确反映当前使用的模板和下载器
   if (!stored || stored.name !== manifest.name || stored.downloader !== manifest.downloader) {
     await writeStoredTemplate(projectDir, manifest);
   }
