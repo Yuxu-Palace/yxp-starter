@@ -1,4 +1,4 @@
-import type { TemplateDefinition, TemplateSource } from '../utils/template-config';
+import type { TemplateDefinition, TemplateSource } from '@/utils/template-config';
 
 export interface DownloadContext {
   template: TemplateDefinition;

@@ -1,10 +1,10 @@
 import { promises as fs } from 'node:fs';
 import { pick } from '@yuxu-palace/kun-mythos';
-import { getDiffStats } from '../../utils/diff';
-import { fileExists, readFileContent } from '../../utils/fs';
-import { logDiffResult } from '../../utils/logger';
-import { applyPreservedJsonFields } from '../../utils/package-json';
-import { toPosixPath } from '../../utils/path';
+import { getDiffStats } from '@/utils/diff';
+import { fileExists, readFileContent } from '@/utils/fs';
+import { logDiffResult } from '@/utils/logger';
+import { applyPreservedJsonFields } from '@/utils/package-json';
+import { toPosixPath } from '@/utils/path';
 import { SKIPPED_DYNAMIC_FILES } from './constants';
 import type { DiffSummary, FileUpdate, PendingUpdate, TemplateUpdateHandler } from './types';
 

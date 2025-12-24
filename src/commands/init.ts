@@ -2,12 +2,14 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import prompts from 'prompts';
-import { TEMPLATE_IGNORE_ENTRIES } from '../core/update/constants';
-import { copyDirectory, fileExists } from '../utils/fs';
-import { readJsonFile, writeJsonFile } from '../utils/json';
-import { logger } from '../utils/logger';
-import { preservePackageFields } from '../utils/package-json';
-import { ensureTemplateReady, selectDownloader } from '../utils/template-fetch';
+import { TEMPLATE_IGNORE_ENTRIES } from '@/core/update/constants';
+import { scanTemplateFiles } from '@/core/update/scanner';
+import { copyDirectory, fileExists } from '@/utils/fs';
+import { createIgnoreMatcher } from '@/utils/ignore';
+import { readJsonFile, writeJsonFile } from '@/utils/json';
+import { logger } from '@/utils/logger';
+import { preservePackageFields } from '@/utils/package-json';
+import { ensureTemplateReady, selectDownloader } from '@/utils/template-fetch';
 import {
   buildStoredTemplateManifest,
   chooseTemplate,
@@ -15,7 +17,7 @@ import {
   listTemplateOptions,
   type TemplateOption,
   writeStoredTemplate,
-} from '../utils/templates';
+} from '@/utils/templates';
 
 /**
  * 将模板文件复制到目标目录。
@@ -80,10 +82,16 @@ export async function init(rawProjectName: string | undefined, options: InitComm
     await customizePackageJson(targetDir, projectName, template);
     logger.success('✓ Customized package.json');
 
+    // 扫描模板目录获取文件列表
+    const { ignores } = await createIgnoreMatcher(templateDir);
+    const templateFiles = await scanTemplateFiles(templateDir, ignores);
+    const copiedFiles = templateFiles.map((file) => file.path);
+
     const manifest = buildStoredTemplateManifest({
       name: template.name,
       source: template.source,
       downloader: usedDownloader,
+      files: copiedFiles,
     });
     await writeStoredTemplate(targetDir, manifest);
 

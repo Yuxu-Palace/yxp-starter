@@ -1,6 +1,6 @@
 import path from 'node:path';
-import { getDiffStats } from '../../utils/diff';
-import { fileExists, readFileContent } from '../../utils/fs';
+import { getDiffStats } from '@/utils/diff';
+import { fileExists, readFileContent } from '@/utils/fs';
 import { UPDATE_KIND_PRIORITY } from './constants';
 import { getTemplateUpdateHandlers } from './handlers';
 import { scanProjectFiles, scanTemplateFiles } from './scanner';
@@ -14,9 +14,10 @@ export async function collectPendingUpdates(
   currentDir: string,
   shouldIgnore: IgnoreMatcher,
   jsonPreserveMap: Record<string, string[]>,
+  recordedFiles?: string[],
 ): Promise<PendingUpdate[]> {
   const allTemplateFiles = await scanTemplateFiles(templatesDir, shouldIgnore);
-  const projectFiles = await scanProjectFiles(currentDir, allTemplateFiles, shouldIgnore);
+  const projectFiles = await scanProjectFiles(currentDir, recordedFiles);
   const updates: PendingUpdate[] = [];
 
   for (let index = 0; index < allTemplateFiles.length; ++index) {

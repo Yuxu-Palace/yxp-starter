@@ -1,7 +1,7 @@
 import path from 'node:path';
 import gitDown from '@cmtlyt/git-down';
-import { fileExists } from '../utils/fs';
-import { logger } from '../utils/logger';
+import { fileExists } from '@/utils/fs';
+import { logger } from '@/utils/logger';
 import type { DownloadContext, DownloadResult, TemplateDownloadPlugin } from './types';
 
 /**

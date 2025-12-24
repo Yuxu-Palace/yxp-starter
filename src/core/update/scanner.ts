@@ -1,7 +1,8 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { fileExists } from '../../utils/fs';
+import { fileExists } from '@/utils/fs';
 import type { FileUpdate, IgnoreMatcher } from './types';
+import { MissingFileManifestError } from './types';
 
 /**
  * 扫描模板目录并收集需要同步的文件。
@@ -54,83 +55,25 @@ function processScannedFile(files: FileUpdate[], relativePath: string): void {
 }
 
 /**
- * 提取模板文件的顶级目录，限定项目扫描范围。
+ * 扫描项目中记录的模板文件。
+ * 只扫描 recordedFiles 清单中的文件（精准模式）。
  */
-export function getTopLevelEntries(files: FileUpdate[]): Set<string> {
-  const entries = new Set<string>();
+export async function scanProjectFiles(currentDir: string, recordedFiles?: string[]): Promise<Set<string>> {
+  const results = new Set<string>();
 
-  for (let index = 0; index < files.length; ++index) {
-    const file = files[index];
-    const [topLevel] = file.path.split(path.sep);
-    entries.add(topLevel ?? file.path);
+  // 必须提供文件清单，否则无法准确区分模板文件和业务文件
+  if (!recordedFiles || recordedFiles.length === 0) {
+    throw new MissingFileManifestError();
   }
 
-  return entries;
-}
-
-/**
- * 扫描项目中与模板顶级目录对应的文件。
- */
-export async function scanProjectFiles(
-  currentDir: string,
-  templateFiles: FileUpdate[],
-  shouldIgnore: IgnoreMatcher,
-): Promise<Set<string>> {
-  const results = new Set<string>();
-  const topLevelEntries = getTopLevelEntries(templateFiles);
-
-  for (const entry of topLevelEntries) {
-    const projectPath = path.join(currentDir, entry);
-
-    if (!(await fileExists(projectPath))) {
-      continue;
-    }
-
-    const stats = await fs.lstat(projectPath);
-
-    if (stats.isDirectory()) {
-      if (shouldIgnore(entry, true)) {
-        continue;
-      }
-      await scanProjectDirectory(projectPath, currentDir, results, shouldIgnore);
-    } else if (stats.isFile()) {
-      if (shouldIgnore(entry, false)) {
-        continue;
-      }
-      results.add(entry);
+  // 只扫描清单中记录的文件
+  for (let index = 0; index < recordedFiles.length; ++index) {
+    const filePath = recordedFiles[index];
+    const fullPath = path.join(currentDir, filePath);
+    if (await fileExists(fullPath)) {
+      results.add(filePath);
     }
   }
 
   return results;
-}
-
-/**
- * 递归扫描项目目录。
- */
-async function scanProjectDirectory(
-  dirPath: string,
-  basePath: string,
-  files: Set<string>,
-  shouldIgnore: IgnoreMatcher,
-): Promise<void> {
-  const directoryEntries = await fs.readdir(dirPath, { withFileTypes: true });
-
-  for (let index = 0; index < directoryEntries.length; ++index) {
-    const entry = directoryEntries[index];
-
-    const fullPath = path.join(dirPath, entry.name);
-    const relativePath = path.relative(basePath, fullPath);
-
-    if (entry.isDirectory()) {
-      if (shouldIgnore(relativePath, true)) {
-        continue;
-      }
-      await scanProjectDirectory(fullPath, basePath, files, shouldIgnore);
-      continue;
-    }
-
-    if (entry.isFile() && !shouldIgnore(relativePath, false)) {
-      files.add(relativePath);
-    }
-  }
 }

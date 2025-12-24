@@ -21,6 +21,7 @@ export interface StoredTemplateManifest {
   source: TemplateSource;
   updatedAt: string;
   downloader?: string;
+  files?: string[]; // 记录从模板复制的文件清单（用于区分模板文件和业务文件）
 }
 
 interface BuildManifestOptions {
@@ -28,6 +29,7 @@ interface BuildManifestOptions {
   source: TemplateSource;
   downloader: string;
   updatedAt?: string;
+  files?: string[];
 }
 
 /**
@@ -124,12 +126,13 @@ export async function writeStoredTemplate(projectDir: string, manifest: StoredTe
  * 构造标准化的模板清单，使用可读的时间格式。
  */
 export function buildStoredTemplateManifest(options: BuildManifestOptions): StoredTemplateManifest {
-  const { name, source, downloader, updatedAt } = options;
+  const { name, source, downloader, updatedAt, files } = options;
   return {
     name,
     source,
     downloader,
     updatedAt: updatedAt ?? formatSyncTime(),
+    ...(files && { files }),
   };
 }
 

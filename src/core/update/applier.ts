@@ -1,9 +1,9 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { logger } from '../../utils/logger';
-import { applyPreservedJsonFields, readJsonFileFields } from '../../utils/package-json';
-import { toPosixPath } from '../../utils/path';
-import { createProgressTracker } from '../../utils/progress';
+import { logger } from '@/utils/logger';
+import { applyPreservedJsonFields, readJsonFileFields } from '@/utils/package-json';
+import { toPosixPath } from '@/utils/path';
+import { createProgressTracker } from '@/utils/progress';
 import type { ApplyUpdateOptions, PendingUpdate } from './types';
 
 /**

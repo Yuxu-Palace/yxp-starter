@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { PendingUpdate } from '../core/update/types';
+import type { PendingUpdate } from '@/core/update/types';
 import { logger } from './logger';
 
 /**

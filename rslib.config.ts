@@ -13,6 +13,11 @@ export default defineConfig({
       index: './src/index.ts',
     },
   },
+  resolve: {
+    alias: {
+      '@': './src',
+    },
+  },
   output: {
     distPath: {
       root: 'bin',

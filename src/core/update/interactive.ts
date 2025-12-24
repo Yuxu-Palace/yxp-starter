@@ -1,9 +1,9 @@
 import process from 'node:process';
 import chalk from 'chalk';
 import prompts from 'prompts';
-import { showDiff } from '../../utils/diff';
-import { formatStats, logger } from '../../utils/logger';
-import { createProgressTracker } from '../../utils/progress';
+import { showDiff } from '@/utils/diff';
+import { formatStats, logger } from '@/utils/logger';
+import { createProgressTracker } from '@/utils/progress';
 import { applyBatchUpdate, applyUpdate } from './applier';
 import type { ApplyUpdateOptions, PendingUpdate, PromptConfig, UpdateAction, UpdateActionHandler } from './types';
 

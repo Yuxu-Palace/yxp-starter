@@ -1,8 +1,8 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import ignore from 'ignore';
-import { DEFAULT_UPDATE_IGNORE_PATTERNS, IGNORED_FILE_NAME } from '../core/update/constants';
-import type { IgnoreMatcher } from '../core/update/types';
+import { DEFAULT_UPDATE_IGNORE_PATTERNS, IGNORED_FILE_NAME } from '@/core/update/constants';
+import type { IgnoreMatcher } from '@/core/update/types';
 import { fileExists } from './fs';
 import { toPosixPath } from './path';
 import { type LoadedYxpConfig, loadYxpConfig, normalizeStringArray } from './yxp-config';

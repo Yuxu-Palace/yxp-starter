@@ -90,3 +90,17 @@ export interface UpdateActionContext {
 
 /** 交互动作处理器。 */
 export type UpdateActionHandler = (context: UpdateActionContext) => Promise<'continue' | 'break'>;
+
+/**
+ * 缺少模板文件清单时抛出的错误。
+ */
+export class MissingFileManifestError extends Error {
+  constructor(message?: string) {
+    super(
+      message ||
+        '缺少模板文件清单！.yxp-template.json 中未找到 files 字段。\n' +
+          '这可能是旧版本项目，请重新运行 init 命令初始化项目。',
+    );
+    this.name = 'MissingFileManifestError';
+  }
+}
