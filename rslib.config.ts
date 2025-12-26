@@ -4,18 +4,13 @@ export default defineConfig({
   lib: [
     {
       format: 'cjs',
-      syntax: 'es2022',
+      syntax: 'es2024',
       bundle: true,
     },
   ],
   source: {
     entry: {
       index: './src/index.ts',
-    },
-  },
-  resolve: {
-    alias: {
-      '@': './src',
     },
   },
   output: {
