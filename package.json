@@ -1,32 +1,23 @@
 {
-  "name": "yxp-starter",
+  "name": "@yuxu-palace/yxp-starter",
   "version": "0.0.0",
-  "description": "",
+  "description": "Starter kit for YXP library projects with inheritable configs and CLI tools",
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "dev:mf": "rslib mf-dev",
     "check": "biome check --write",
     "format": "biome format --write",
-    "test": "vitest",
-    "test:ci": "cross-env CI=true vitest run",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "pnpm run build"
   },
   "type": "module",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.cts",
-        "default": "./dist/cjs/index.cjs"
-      }
-    }
+  "bin": {
+    "yxp-start": "./bin/index.cjs"
   },
-  "main": "./dist/cjs/index.cjs",
-  "types": "./dist/esm/index.d.ts",
+  "files": [
+    "bin",
+    "template.json"
+  ],
   "keywords": [],
   "author": "yuxu-palace",
   "license": "MIT",
@@ -39,16 +30,26 @@
       "name": "pnpm"
     }
   },
+  "dependencies": {
+    "@cmtlyt/git-down": "^0.3.1",
+    "@yuxu-palace/kun-mythos": "https://pkg.pr.new/Yuxu-Palace/kun-mythos/@yuxu-palace/kun-mythos@26e26e7",
+    "chalk": "^5.3.0",
+    "cli-progress-footer": "^2.3.3",
+    "commander": "^12.1.0",
+    "diff": "^7.0.0",
+    "ignore": "^5.3.1",
+    "prompts": "^2.4.2"
+  },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.2",
+    "@biomejs/biome": "2.2.5",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
-    "@rslib/core": "^0.13.1",
+    "@rslib/core": "^0.15.0",
+    "@types/diff": "^6.0.0",
     "@types/node": "^24.3.1",
-    "cross-env": "^10.0.0",
+    "@types/prompts": "^2.4.9",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.6",
-    "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.2"
   }
 }

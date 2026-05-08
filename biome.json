@@ -1,7 +1,8 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": ["**", "!bin/*", "!node_modules"]
   },
   "assist": {
     "actions": {
@@ -277,7 +278,10 @@
             "syntax": "shorthand"
           }
         },
-        "useConsistentBuiltinInstantiation": { "level": "error", "fix": "safe" },
+        "useConsistentBuiltinInstantiation": {
+          "level": "error",
+          "fix": "safe"
+        },
         "useConsistentCurlyBraces": { "level": "error", "fix": "safe" },
         "useConsistentMemberAccessibility": {
           "level": "error",
