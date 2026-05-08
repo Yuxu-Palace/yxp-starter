@@ -21,7 +21,7 @@ jobs:
 
       - name: 版本管理
         if: ${{ github.event.action != 'closed' || github.event.pull_request.merged == true }}
-        uses: Yuxu-Palace/yuheng-dispatch@v0.1.0
+        uses: Yuxu-Palace/yuheng-dispatch@v0.2.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           
